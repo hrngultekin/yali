@@ -5,10 +5,10 @@ import os
 import parted
 
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 
 from device import Device, DeviceError

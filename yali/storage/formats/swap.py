@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 from parted import PARTITION_SWAP, fileSystemType
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 
 from yali.storage.library.swap import swapon, swap_off, swap_status, mkswap, SwapError

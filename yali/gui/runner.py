@@ -15,10 +15,10 @@ import sys
 import imp
 
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QStyleFactory
@@ -58,6 +58,7 @@ class Runner():
         try:
             self._window = yali.gui.YaliWindow.Widget()
         except yali.Error, msg:
+            print("error")
             ctx.logger.debug(msg)
             sys.exit(1)
 
@@ -100,7 +101,7 @@ class Runner():
 
     def _reinit_screen(self):
         QTimer.singleShot(700, self._init_screen)
-
+    
     def _init_screen(self):
         # We want it to be a full-screen window
         # inside the primary display.
@@ -113,7 +114,7 @@ class Runner():
         
         #self._window.move(screen.topLeft())
         self._window.show()
-
+    
     def _get_screens(self, install_type):
         screens = []
         ctx.logger.info("Install type is %s" % ctx.STEP_TYPE_STRINGS[install_type])
@@ -141,13 +142,12 @@ class Runner():
                 screens.append(screenClass)
 
         return screens
-
-
+    
+    
     def _set_steps(self, screens):
         self._window.createWidgets(screens)
         self._window.setCurrent(ctx.flags.startup)
-
-
+    
     def run(self):
         # Use default theme;
         # if you use different Qt4 theme our works looks ugly :)

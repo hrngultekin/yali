@@ -5,10 +5,10 @@ import os
 from parted import PARTITION_RAID
 
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 from yali.storage.library import raid
 from yali.storage.formats import Format, FormatError, register_device_format

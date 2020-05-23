@@ -25,8 +25,7 @@ class Flags:
        """Parse yali= from kernel boot parameters."""
 
        options = get_kernel_option("yali")
-       self.__dict__['flags']['live'] = options.has_key("live") or \
-                                        os.path.exists("/home/pisi/.livemedia")  or os.path.exists("/run/pisilinux/livemedia")
+       self.__dict__['flags']['live'] = options.has_key("live") or os.path.exists("/home/pisi/.livemedia")  or os.path.exists("/run/pisilinux/livemedia")
        if options.has_key("system"):
            self.__dict__['flags']['install_type'] = ctx.STEP_BASE
        elif options.has_key("firstboot"):

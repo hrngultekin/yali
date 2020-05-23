@@ -14,10 +14,10 @@ import os
 import dbus
 import pisi
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 from PyQt5.QtWidgets import QWidget, QListWidgetItem
 from PyQt5.QtCore import pyqtSignal, QObject, QEvent

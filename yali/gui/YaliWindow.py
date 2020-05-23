@@ -14,10 +14,10 @@ import sys
 import codecs
 
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 from PyQt5.QtCore import (QResource, pyqtSignal, QObject, Qt, QTimer, QSize)
 
@@ -38,6 +38,7 @@ from yali.gui.YaliDialog import Dialog, QuestionDialog, Tetris
 from yali.gui.aspects import enableNavButtonsAspect, disableNavButtonsAspect
 
 from pds.gui import *
+
 
 class HelpWidget(PAbstractBox):
 
@@ -255,7 +256,7 @@ class Widget(QWidget):
         else:
             self.unsetCursor()
 
-    # show/hide help text
+    # show/hide help text
     def slotToggleHelp(self):
         self.ui.helpContentFrame.setFixedHeight(self.ui.helpContent.height())
         if self.ui.helpContentFrame.isVisible():
@@ -272,7 +273,7 @@ class Widget(QWidget):
         else:
             ctx.debugger.showWindow()
 
-    # returns the id of current stack
+    # returns the id of current stack
     def getCurrent(self, index):
         new_index   = self.ui.mainStack.currentIndex() + index
         total_index = self.ui.mainStack.count()
@@ -280,12 +281,12 @@ class Widget(QWidget):
         if new_index > total_index: new_index = total_index
         return new_index
 
-    # move to id numbered step
+    # move to id numbered step
     def setCurrent(self, index=None):
         if index:
             self.stackMove(index)
 
-    # execute next step
+    # execute next step
     def slotNext(self, dry_run=False):
         widget = self.ui.mainStack.currentWidget()
         ret = True

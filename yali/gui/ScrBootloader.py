@@ -10,10 +10,10 @@
 # Please read the COPYING file.
 #
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import pyqtSignal

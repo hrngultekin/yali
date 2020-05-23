@@ -12,10 +12,10 @@ import sys
 import pardus.xorg
 
 try:
-	from PyQt5.QtCore import QCoreApplication
-	_ = QCoreApplication.translate
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
 except:
-	_ = lambda x,y: y
+    _ = lambda x,y: y
 
 from PyQt5.QtWidgets import QWidget, QListWidgetItem, QLineEdit#,QFocusEvent
 from PyQt5.QtCore import pyqtSignal
