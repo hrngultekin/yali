@@ -227,7 +227,7 @@ def main():
     setup_environment()
 
     init_gui_interface()
-
+    
 
     setup_exception_handler()
 
