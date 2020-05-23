@@ -1,8 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import os
 import copy
@@ -25,7 +28,7 @@ class DiskLabelCommitError(DiskLabelError):
 class DiskLabel(Format):
     """ Disklabel """
     _type = "disklabel"
-    _name = _("partition table")
+    _name = _("General", "partition table")
     _formattable = True                # can be formatted
     _supported = False                 # is supported
 

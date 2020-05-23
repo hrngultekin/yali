@@ -2,8 +2,11 @@
 import os
 import sys
 import parted
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import yali
 import yali.util
@@ -45,7 +48,7 @@ def complete(storage, intf):
     try:
         storage.devicetree.teardownAll()
     except DeviceTreeError, msg:
-        ctx.logger.debug(_("Failed teardownAll in storage.complete with error:%s") % msg)
+        ctx.logger.debug(_("General", "Failed teardownAll in storage.complete with error:%s") % msg)
         return returncode
 
     title = None
@@ -54,14 +57,14 @@ def complete(storage, intf):
     try:
         storage.doIt()
     except DeviceError as (msg, device):
-        title = _("Storage Device Error")
-        message = _("There was an error encountered while "
+        title = _("General", "Storage Device Error")
+        message = _("General", "There was an error encountered while "
                     "partitioning on device %s.") % (device,)
         details = msg
         returncode = False
     except FormatError as (msg, device):
-        title = _("Storage Format Error")
-        message = _("There was an error encountered while "
+        title = _("General", "Storage Format Error")
+        message = _("General", "There was an error encountered while "
                     "formatting on device %s.") % (device,)
         details = "%s" % (msg,)
         returncode = False
@@ -72,7 +75,7 @@ def complete(storage, intf):
         if title:
             rc = intf.detailedMessageWindow(title, message, details,
                                             type="custom", customIcon="error",
-                                            customButtons=[_("Exit installer"), _("Ignore")])
+                                            customButtons=[_("General", "Exit installer"), _("General", "Ignore")])
             if not rc:
                 sys.exit(2)
 
@@ -155,18 +158,18 @@ def mountExistingSystem(storage, intf, rootDevice, allowDirty=None, warnDirty=No
                 dirtyDevs.append(device.path)
 
         if not allowDirty and dirtyDevs:
-            intf.messageWindow(_("Dirty File Systems"),
-                               _("The following file systems for your Linux system "
+            intf.messageWindow(_("General", "Dirty File Systems"),
+                               _("General", "The following file systems for your Linux system "
                                  "were not unmounted cleanly.  Please boot your "
                                  "Linux installation, let the file systems be "
                                  "checked and shut down cleanly to rescue.\n"
                                  "%s") % "\n".join(dirtyDevs), type="custom",
-                               customIcon="warning", customButtons=[_("Ok")])
+                               customIcon="warning", customButtons=[_("General", "Ok")])
             storage.devicetree.teardownAll()
             return False
         elif warnDirty and dirtyDevs:
-            rc = intf.messageWindow(_("Dirty File Systems"),
-                                    _("The following file systems for your Linux "
+            rc = intf.messageWindow(_("General", "Dirty File Systems"),
+                                    _("General", "The following file systems for your Linux "
                                       "system were not unmounted cleanly.  Would "
                                       "you like to mount them anyway?\n"
                                       "%s") % "\n".join(dirtyDevs),
@@ -333,29 +336,29 @@ class Storage(object):
             raise ValueError("arg1 (%s) must be a Device instance" % device)
 
         if not ignoreProtected and device.protected:
-            return _("This partition is holding the data for the hard "
+            return _("General", "This partition is holding the data for the hard "
                       "drive install.")
         elif isinstance(device, Partition) and device.isProtected:
-            return _("You cannot delete a partition of a LDL formatted "
+            return _("General", "You cannot delete a partition of a LDL formatted "
                      "DASD.")
         elif device.format.type == "mdmember":
             for array in self.raidArrays + self.raidContainers:
                 if array.dependsOn(device):
                     if array.minor is not None:
-                        return _("This device is part of the RAID "
+                        return _("General", "This device is part of the RAID "
                                  "device %s, you have to edit or "
                                  "remove the raid partition "
                                  "appropriately!") % (array.path,)
                     else:
-                        return _("This device is part of a RAID device.")
+                        return _("General", "This device is part of a RAID device.")
         elif device.format.type == "lvmpv":
             for vg in self.vgs:
                 if vg.dependsOn(device):
                     if vg.name is not None:
-                        return _("This device is part of the LVM "
+                        return _("General", "This device is part of the LVM "
                                  "volume group '%s'.") % (vg.name,)
                     else:
-                        return _("This device is part of a LVM volume "
+                        return _("General", "This device is part of a LVM volume "
                                  "group.")
         elif isinstance(device, Partition) and device.isExtended:
             reasons = {}
@@ -364,7 +367,7 @@ class Storage(object):
                 if reason:
                     reasons[dep.path] = reason
             if reasons:
-                msg =  _("This device is an extended partition which "
+                msg =  _("General", "This device is an extended partition which "
                          "contains logical partitions that cannot be "
                          "deleted:\n\n")
                 for dev in reasons:
@@ -870,18 +873,18 @@ class Storage(object):
             boot = None
 
         if not root:
-            errors.append(_("You have not defined a root partition (/),which is required for installation "
+            errors.append(_("General", "You have not defined a root partition (/),which is required for installation "
                             "of %s to continue.") % yali.util.product_name())
 
         if (root and
             root.size < ctx.consts.min_root_size):
-            errors.append(_("Your / partition is less than %(min)s MB which is lower than "
+            errors.append(_("General", "Your / partition is less than %(min)s MB which is lower than "
                             "recommended for a normal %(productName)s install.")
                             % {'min': ctx.consts.min_root_size, 'productName': yali.util.product_name()})
 
         for (mount, size) in checkSizes:
             if mount in filesystems and filesystems[mount].size < size:
-                warnings.append(_("Your %(mount)s partition is less than %(size)s megabytes which is "
+                warnings.append(_("General", "Your %(mount)s partition is less than %(size)s megabytes which is "
                                   "lower than recommended for a normal %(productName)s install.")
                                 % {'mount': mount, 'size': size, 'productName': yali.util.product_name()})
 
@@ -890,19 +893,19 @@ class Storage(object):
 
         if not swaps:
             if yali.util.memInstalled() < yali.util.EARLY_SWAP_RAM:
-                errors.append(_("You have not specified a swap partition. Due to the amount of memory "
+                errors.append(_("General", "You have not specified a swap partition. Due to the amount of memory "
                                 "present, a swap partition is required to complete installation."))
             else:
-                warnings.append(_("You have not specified a swap partition. Although not strictly "
+                warnings.append(_("General", "You have not specified a swap partition. Although not strictly "
                                   "required in all cases, it will significantly improve performance"
                                   "for most installations."))
 
         for (mountpoint, dev) in filesystems.items():
             if mountpoint in mustbeonroot:
-                errors.append(_("This mount point is invalid. The %s directory must be on the / file system.") % mountpoint)
+                errors.append(_("General", "This mount point is invalid. The %s directory must be on the / file system.") % mountpoint)
 
             if mountpoint in mustbeonlinuxfs and (not dev.format.mountable or not dev.format.linuxNative):
-                errors.append(_("The mount point %s must be on a linux file system.") % mountpoint)
+                errors.append(_("General", "The mount point %s must be on a linux file system.") % mountpoint)
 
         return (errors, warnings)
 
@@ -922,12 +925,12 @@ class Storage(object):
 
         """
         if not self.disks:
-            rc = intf.messageWindow(_("No Drives Found"),
-                               _("An error has occurred - no valid devices were "
+            rc = intf.messageWindow(_("General", "No Drives Found"),
+                               _("General", "An error has occurred - no valid devices were "
                                  "found on\nwhich to create new file systems. "
                                  "Please check your\nhardware for the cause "
                                  "of this problem."), type="custom",
-                               customButtons=[_("Reboot"), _("Cancel")], customIcon="error")
+                               customButtons=[_("General", "Reboot"), _("General", "Cancel")], customIcon="error")
             if not rc:
                 return None
             else:

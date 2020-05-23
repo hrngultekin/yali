@@ -4,10 +4,12 @@
 import re
 import os
 import math
-import gettext
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import yali.util
 from yali.storage.library import  LibraryError
@@ -262,7 +264,7 @@ def vginfo(vg_name):
     buf = yali.util.run_batch("lvm", args)[1]
     info = buf.split()
     if len(info) != 7:
-        raise LVMError(_("vginfo failed for %s" % vg_name))
+        raise LVMError(_("General", "vginfo failed for %s" % vg_name))
 
     d = {}
     (d['uuid'],d['size'],d['free'],d['pe_size'],
@@ -288,7 +290,7 @@ def lvs(vg_name):
                      "attr": attr}
 
     if not lvs:
-        raise LVMError(_("lvs failed for %s" % vg_name))
+        raise LVMError(_("General", "lvs failed for %s" % vg_name))
 
     return lvs
 

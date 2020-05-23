@@ -9,6 +9,7 @@
 #
 # Please read the COPYING file.
 import os
+import sys
 import glob
 import shutil
 import sipconfig
@@ -21,7 +22,25 @@ from distutils.command.install import install
 from distutils.spawn import find_executable, spawn
 
 I18N_DOMAIN = "yali"
-I18N_LANGUAGES = ["tr", "nl", "it", "fr", "de", "pt_BR", "es", "pl", "ca", "sv", "hu", "ru", "hr"]
+I18N_LANGUAGES = ["tr", "en", "nl", "it", "fr", "de", "pt_BR", "es", "pl", "ca", "sv", "hu", "ru", "hr"]
+
+# WARNING: update_messages and release_messages run with python3
+def update_messages():
+    files = glob.glob("build/lib.linux-x86_64-2.7/yali/**/*.py", recursive=True)
+    # print(files)
+
+    for l in I18N_LANGUAGES:
+        print(l)
+        os.system("pylupdate5 -translate-function _ {files} -ts lang/{lang}.ts".format(files=" ".join(files), lang=l))
+
+
+def release_messages():
+    ts_files = glob.glob1("lang", "*.ts")
+    ts_files = "lang/" + " lang/".join(ts_files)
+
+    os.system("lrelease {}".format(ts_files))
+
+
 
 def qt_ui_files():
     ui_files = "yali/gui/Ui/*.ui"
@@ -53,7 +72,7 @@ class YaliBuild(build):
 
     def run(self):
         for ui_file in qt_ui_files():
-            print ui_file
+            print(ui_file)
             self.compileUI(ui_file)
             self.changeQRCPath(ui_file)
         build.run(self)
@@ -83,16 +102,16 @@ class YaliUninstall(Command):
     def run(self):
         yali_dir = os.path.join(get_python_lib(), "yali")
         if os.path.exists(yali_dir):
-            print "removing: ", yali_dir
+            print("removing: ", yali_dir)
             shutil.rmtree(yali_dir)
 
         conf_dir = "/etc/yali"
         if os.path.exists(conf_dir):
-            print "removing: ", conf_dir
+            print("removing: ", conf_dir)
             shutil.rmtree(conf_dir)
-        
+
         if os.path.exists("/usr/share/applications/yali.desktop"):
-            print "removing: rest of installation",
+            print ("removing: rest of installation")
             os.unlink("/usr/share/applications/yali.desktop")
         os.unlink("/usr/bin/yali-bin")
         os.unlink("/usr/bin/start-yali")
@@ -104,7 +123,7 @@ class I18nInstall(install):
     def run(self):
         install.run(self)
         for lang in I18N_LANGUAGES:
-            print "Installing '%s' translations..." % lang
+            print("Installing '%s' translations..." % lang)
             os.popen("msgfmt po/%s.po -o po/%s.mo" % (lang, lang))
             if not self.root:
                 self.root = "/"
@@ -114,6 +133,13 @@ class I18nInstall(install):
             except:
                 pass
             shutil.copy("po/%s.mo" % lang, os.path.join(destpath, "%s.mo" % I18N_DOMAIN))
+
+if "update_messages" in sys.argv:
+    update_messages()
+    sys.exit(0)
+elif "release_messages" in sys.argv:
+    release_messages()
+    sys.exit(0)
 
 setup(name="yali",
       version= "3.0.2",
@@ -127,7 +153,8 @@ setup(name="yali",
                   'yali.storage.devices', 'yali.storage.formats', 'yali.storage.library'],
       data_files = [('/etc/yali', glob.glob("conf/*")),
                     ('/lib/udev/rules.d', ["70-yali.rules"]),
-                    ('/usr/share/applications', ["yali.desktop"])],
+                    ('/usr/share/applications', ["yali.desktop"]),
+                    ('/usr/share/yali/lang', glob.glob("lang/*.qm"))],
       scripts = ['yali-bin', 'start-yali', 'bindYali'],
       ext_modules = [Extension('yali._sysutils',
                                sources = ['yali/_sysutils.c'],

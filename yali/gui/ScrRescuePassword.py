@@ -11,10 +11,15 @@ import os
 import sys
 import pardus.xorg
 
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QListWidgetItem, QIcon, QLineEdit#,QFocusEvent
+from PyQt5.QtWidgets import QWidget, QListWidgetItem, QLineEdit#,QFocusEvent
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QIcon
 
 import yali.util
 import yali.context as ctx
@@ -96,13 +101,13 @@ class Widget(QWidget, ScreenWidget):
 
         if not password == '' and (password.lower() == username.lower() or
                                    password.lower() == realname.lower()):
-            self.showError(_('Don\'t use your user name or name as a password'))
+            self.showError(_("General", 'Don\'t use your user name or name as a password'))
             return
         elif password_confirm and password_confirm != password:
-            self.showError(_('Passwords do not match'))
+            self.showError(_("General", 'Passwords do not match'))
             return
         elif len(password) == len(password_confirm) and len(password_confirm) < 4 and not password =='':
-            self.showError(_('Password is too short'))
+            self.showError(_("General", 'Password is too short'))
             return
         else:
             ctx.interface.informationWindow.hide()
@@ -117,10 +122,10 @@ class Widget(QWidget, ScreenWidget):
             RescueUser(self.ui.users, user)
 
         if not self.ui.users.count():
-            rc = ctx.interface.messageWindow(_("Cannot Rescue"),
-                                             _("Your current installation cannot be rescued."),
+            rc = ctx.interface.messageWindow(_("General", "Cannot Rescue"),
+                                             _("General", "Your current installation cannot be rescued."),
                                              type="custom", customIcon="warning",
-                                             customButtons=[_("Exit"), _("Continue")])
+                                             customButtons=[_("General", "Exit"), _("General", "Continue")])
             if rc == 0:
                 sys.exit(0)
             else:
@@ -142,7 +147,7 @@ class RescueUser(QListWidgetItem):
     def __init__(self, parent, user):
         if user.username == "root":
             icon = "root"
-            name = _("Super User")
+            name = _("General", "Super User")
         else:
             name = user.username
             icon = "normal"

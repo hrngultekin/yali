@@ -3,11 +3,13 @@
 
 
 import os
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 from parted import PARTITION_RAID
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 from yali.storage.library import raid
 from yali.storage.formats import Format, FormatError, register_device_format
@@ -18,7 +20,7 @@ class RaidMemberError(FormatError):
 class RaidMember(Format):
     """ An raid member disk. """
     _type = "mdmember"
-    _name = _("software RAID")
+    _name = _("General", "software RAID")
     _udevTypes = ["linux_raid_member"]
     partedFlag = PARTITION_RAID
     _formattable = True                 # can be formatted

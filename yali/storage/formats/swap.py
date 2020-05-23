@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from parted import PARTITION_SWAP, fileSystemType
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 from yali.storage.library.swap import swapon, swap_off, swap_status, mkswap, SwapError
 from yali.storage.formats import Format, FormatError, register_device_format

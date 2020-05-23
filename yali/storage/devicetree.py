@@ -4,8 +4,11 @@
 import os
 import block
 import parted
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import yali.context as ctx
 from yali.storage import StorageError
@@ -1566,7 +1569,7 @@ class DeviceTree(object):
                     for parent in device.parents:
                         if parent.type == "partition":
                             parent.immutable = \
-                                _("This partition is part of an inconsistent LVM Volume Group.")
+                                _("General", "This partition is part of an inconsistent LVM Volume Group.")
                         else:
                             self._removeDevice(parent, moddisk=False)
                             self.addIgnoredDisk(parent.name)

@@ -19,10 +19,12 @@ import time
 import subprocess
 import random
 import hashlib
-import gettext
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import _sysutils
 
@@ -43,14 +45,14 @@ def checkKernelFlags(flag):
             return flag in line
 
 def isLoadedKernelPAE():
-    if os.uname()[2].split("-")[-1].__eq__("pae"):
+    if os.uname()[2].split("-")[-1].__eq__("General", "pae"):
         return True
     else:
         return False
 
 def setMouse(key="left"):
-    struct = {_("left") :"1 2 3",
-              _("right"):"3 2 1"}
+    struct = {_("General", "left") :"1 2 3",
+              _("General", "right"):"3 2 1"}
     os.system("xmodmap -e \"pointer = %s\"" % struct[key])
 
     # Fix for TouchPads in left handed mouse...

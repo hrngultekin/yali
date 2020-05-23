@@ -1,9 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import math
-import gettext
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
@@ -68,8 +71,8 @@ class PhysicalVolumeItem(QtWidgets.QWidget):
             try:
                 self.widget.tmpVolumeGroup
             except Exception, msg:
-                self.editor.intf.messageWindow(_("Not enough space"),
-                                               _("You cannot remove this physical volume because\n"
+                self.editor.intf.messageWindow(_("General", "Not enough space"),
+                                               _("General", "You cannot remove this physical volume because\n"
                                                  "otherwise the volume group will be too small to\n"
                                                  "hold the currently defined logical volumes."),
                                                customIcon="error")

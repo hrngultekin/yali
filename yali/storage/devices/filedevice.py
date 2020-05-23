@@ -1,9 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import os
-import gettext
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 import yali.context as ctx
 from device import Device, DeviceError
@@ -90,7 +93,7 @@ class FileDevice(Device):
 
         w = None
         if intf:
-            w = intf.progressWindow(_("Creating file %s") % (self.path,))
+            w = intf.progressWindow(_("General", "Creating file %s") % (self.path,))
 
         try:
             # this only checks that parents exist

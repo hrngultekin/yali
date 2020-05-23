@@ -11,10 +11,15 @@
 #
 import sys
 import os
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QListWidgetItem, QIcon
+from PyQt5.QtWidgets import QWidget, QListWidgetItem
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QIcon
 
 import yali.storage
 import yali.util
@@ -51,8 +56,8 @@ class Widget(QWidget, Ui_RescueWidget, ScreenWidget):
                 active = yali.storage.mountExistingSystem(ctx.storage, ctx.interface, ctx.installData.rescueRoot, allowDirty=0)
             except ValueError as e:
                 ctx.logger.error("Error mounting filesystem: %s" % e)
-                ctx.interface.messageWindow(_("Mount failed"),
-                                            _("The following error occurred when mounting the file "
+                ctx.interface.messageWindow(_("General", "Mount failed"),
+                                            _("General", "The following error occurred when mounting the file "
                                               "systems listed in /etc/fstab.  Please fix this problem "
                                               "and try to rescue again.\n%s" % e))
                 active = False
@@ -89,10 +94,10 @@ class Widget(QWidget, Ui_RescueWidget, ScreenWidget):
             ctx.installData.rootDevs = yali.storage.findExistingRootDevices(ctx.storage)
 
             if not ctx.installData.rootDevs:
-                rc = ctx.interface.messageWindow(_("Cannot Rescue"),
-                                                 _("Your current installation cannot be rescued."),
+                rc = ctx.interface.messageWindow(_("General", "Cannot Rescue"),
+                                                 _("General", "Your current installation cannot be rescued."),
                                                  type="custom", customIcon="error",
-                                                 customButtons=[_("Exit"), _("Continue")])
+                                                 customButtons=[_("General", "Exit"), _("General", "Continue")])
                 if rc == 0:
                     sys.exit(0)
                 else:

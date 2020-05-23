@@ -4,10 +4,13 @@ import sys
 import os
 import parted
 from operator import add, sub, gt, lt
-import gettext
+#import gettext
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import yali.util
 import yali.context as ctx
@@ -504,7 +507,7 @@ def getNextPartitionType(disk, no_primary=None):
     extended = disk.getExtendedPartition()
     supportsExtended = disk.supportsFeature(parted.DISK_TYPE_EXTENDED)
     logicalCount = len(disk.getLogicalPartitions())
-    maxLogicals = disk.getMaxLogicalPartitions()
+    #maxLogicals = disk.getMaxLogicalPartitions()
     primaryCount = disk.primaryPartitionCount
 
     if primaryCount < disk.maxPrimaryPartitionCount:
@@ -700,7 +703,7 @@ def addPartition(disk, free, part_type, size):
 
     maxLength = disk.partedDisk.maxPartitionLength
     if maxLength and newGeom.length > maxLength:
-        raise PartitioningError(_("requested size exceeds maximum allowed"))
+        raise PartitioningError(_("General", "requested size exceeds maximum allowed"))
 
     # create the partition and add it to the disk
     partition = parted.Partition(disk=disk.partedDisk,
@@ -908,7 +911,7 @@ def allocatePartitions(storage, disks, partitions, freespace):
                 problem = "small"
 
             if problem:
-                raise PartitioningError(_("partition is too %(problem)s for %(format)s formatting")
+                raise PartitioningError(_("General", "partition is too %(problem)s for %(format)s formatting")
                                         % {"problem":problem, "format":_part.format.name})
 
             ctx.logger.debug("checking freespace on %s" % _disk.name)
@@ -1048,7 +1051,7 @@ def allocatePartitions(storage, disks, partitions, freespace):
                 break
 
         if free is None:
-            raise PartitioningError(_("not enough free space on disks"))
+            raise PartitioningError(_("General", "not enough free space on disks"))
 
         _disk = use_disk
         disklabel = _disk.format
@@ -1069,7 +1072,7 @@ def allocatePartitions(storage, disks, partitions, freespace):
                                           boot=_part.req_bootable,
                                           grow=_part.req_grow)
             if not free:
-                raise PartitioningError(_("not enough free space after "
+                raise PartitioningError(_("General", "not enough free space after "
                                         "creating extended partition"))
 
         partition = addPartition(disklabel, free, part_type, _part.req_size)
@@ -1245,7 +1248,7 @@ def growLVM(storage):
         if total_free < 0:
             # by now we have allocated the PVs so if there isn't enough
             # space in the VG we have a real problem
-            raise PartitioningError(_("not enough space for LVM requests"))
+            raise PartitioningError(_("General", "not enough space for LVM requests"))
         elif not total_free:
             ctx.logger.debug("vg %s has no free space" % vg.name)
             continue
@@ -1643,10 +1646,10 @@ def doAutoPartition(storage):
         (disks, devs) = _createFreeSpacePartitions(storage)
 
         if disks == []:
-            msg = _("Could not find enough free space for automatic\n"
+            msg = _("General", "Could not find enough free space for automatic\n"
                     "partitioning, please use another partitioning method.")
 
-            ctx.interface.messageWindow(_("Error Partitioning"), msg, type='error')
+            ctx.interface.messageWindow(_("General", "Error Partitioning"), msg, type='error')
 
             storage.reset()
             return False
@@ -1667,8 +1670,8 @@ def doAutoPartition(storage):
         growLVM(storage)
 
     except PartitioningWarning as msg:
-        ctx.interface.messageWindow(_("Warnings During Automatic Partitioning"),
-                                    _("Following warnings occurred during automatic "
+        ctx.interface.messageWindow(_("General", "Warnings During Automatic Partitioning"),
+                                    _("General", "Following warnings occurred during automatic "
                                       "partitioning:\n\n%s") % msg,
                                     type='warning')
         ctx.logger.warning(msg)
@@ -1677,9 +1680,9 @@ def doAutoPartition(storage):
     except PartitioningError as msg:
         # restore drives to original state
         storage.reset()
-        extra = _("\n\nPress 'OK' to exit the installer.")
-        ctx.interface.messageWindow(_("Error Partitioning"),
-                                    _("Could not allocate requested partitions: \n"
+        extra = _("General", "\n\nPress 'OK' to exit the installer.")
+        ctx.interface.messageWindow(_("General", "Error Partitioning"),
+                                    _("General", "Could not allocate requested partitions: \n"
                                       "%(msg)s.%(extra)s") %
                                     {'msg': msg, 'extra': extra},
                                     type='error')
@@ -1697,9 +1700,9 @@ def doAutoPartition(storage):
 
         if errors:
             errortxt = "\n".join(errors)
-            extra = _("\n\nPress 'OK' to exit the installer.")
-            ctx.interface.messageWindow(_("Automatic Partitioning Errors"),
-                                        _("The following errors occurred with your "
+            extra = _("General", "\n\nPress 'OK' to exit the installer.")
+            ctx.interface.messageWindow(_("General", "Automatic Partitioning Errors"),
+                                        _("General", "The following errors occurred with your "
                                           "partitioning:\n\n%(errortxt)s\n\n"
                                           "This can happen if there is not enough "
                                           "space on your hard drive(s) for the "

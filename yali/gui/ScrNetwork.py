@@ -2,10 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import pds.container
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QGridLayout
+from PyQt5.QtWidgets import QWidget, QGridLayout
+from PyQt5.Qt import pyqtSignal
+
 import yali.context as ctx
 from yali.gui import ScreenWidget
 

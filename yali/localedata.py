@@ -10,16 +10,19 @@
 # Please read the COPYING file.
 #
 
-import gettext
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 locales = {
 
 "tr" : {
-        "name" : _("Turkish"),
+        "name" : _("General", "Turkish"),
         "xkblayout" : "tr",
-        "xkbvariant" : [["f",_("Turkish F")],["",_("Turkish Q")]],
+        "xkbvariant" : [["f",_("General", "Turkish F")],["",_("General", "Turkish Q")]],
         "locale" : "tr_TR.UTF-8",
         "consolekeymap" : ["trf","trq"],
         "consolefont" : "iso09.16",
@@ -28,7 +31,7 @@ locales = {
         },
 
 "en" : {
-        "name" : _("English"),
+        "name" : _("General", "English"),
         "xkblayout" : "us",
         "xkbvariant" : None,
         "locale" : "en_US.UTF-8",
@@ -39,7 +42,7 @@ locales = {
         },
 
 "gb" : {
-        "name" : _("English GB"),
+        "name" : _("General", "English GB"),
         "xkblayout" : "gb",
         "xkbvariant" : None,
         "locale" : "en_GB.UTF-8",
@@ -49,7 +52,7 @@ locales = {
         },
 
 "gr" : {
-        "name" : _("Greek"),
+        "name" : _("General", "Greek"),
         "xkblayout" : "gr",
         "xkbvariant" : None,
         "locale" : "el_GR.UTF-8",
@@ -59,7 +62,7 @@ locales = {
         },
 
 "af" : {
-        "name" : _("Afrikaans"),
+        "name" : _("General", "Afrikaans"),
         "xkblayout" : "us",
         "xkbvariant" : None,
         "locale" : "af_ZA.UTF-8",
@@ -69,7 +72,7 @@ locales = {
         },
 
 "vi" : {
-        "name" : _("Vietnamese"),
+        "name" : _("General", "Vietnamese"),
         "xkblayout" : "vn",
         "xkbvariant" : None,
         "locale" : "vi_VN.UTF-8",
@@ -79,7 +82,7 @@ locales = {
         },
 
 "ca" : {
-        "name" : _("Catalan"),
+        "name" : _("General", "Catalan"),
         "xkblayout" : "es",
         "xkbvariant" : None,
         "locale" : "ca_ES.UTF-8",
@@ -90,7 +93,7 @@ locales = {
         },
 
 "it" : {
-        "name" : _("Italian"),
+        "name" : _("General", "Italian"),
         "xkblayout" : "it",
         "xkbvariant" : None,
         "locale" : "it_IT.UTF-8",
@@ -101,7 +104,7 @@ locales = {
         },
 
 "cz" : {
-        "name" : _("Czech"),
+        "name" : _("General", "Czech"),
         "xkblayout" : "cz",
         "xkbvariant" : None,
         "locale" : "cs_CZ.UTF-8",
@@ -111,7 +114,7 @@ locales = {
         },
 
 "cy" : {
-        "name" : _("Welsh"),
+        "name" : _("General", "Welsh"),
         "xkblayout" : "gb",
         "xkbvariant" : None,
         "locale" : "cy_GB.UTF-8",
@@ -121,7 +124,7 @@ locales = {
         },
 
 "ar" : {
-        "name" : _("Arabic"),
+        "name" : _("General", "Arabic"),
         "xkblayout" : "ara",
         "xkbvariant" : None,
         "locale" : "ar_SA.UTF-8",
@@ -131,7 +134,7 @@ locales = {
         },
 
 "et" : {
-        "name" : _("Estonian"),
+        "name" : _("General", "Estonian"),
         "xkblayout" : "ee",
         "xkbvariant" : None,
         "locale" : "et_EE.UTF-8",
@@ -141,7 +144,7 @@ locales = {
         },
 
 "es" : {
-        "name" : _("Spanish"),
+        "name" : _("General", "Spanish"),
         "xkblayout" : "es",
         "xkbvariant" : None,
         "locale" : "es_ES.UTF-8",
@@ -152,7 +155,7 @@ locales = {
         },
 
 "ru" : {
-        "name" : _("Russian"),
+        "name" : _("General", "Russian"),
         "xkblayout" : "ru,us",
         "xkbvariant" : None,
         "locale" : "ru_RU.UTF-8",
@@ -163,7 +166,7 @@ locales = {
         },
 
 "nl" : {
-        "name" : _("Dutch"),
+        "name" : _("General", "Dutch"),
         "xkblayout" : "us",
         "xkbvariant" : None,
         "locale" : "nl_NL.UTF-8",
@@ -174,7 +177,7 @@ locales = {
         },
 
 "pt" : {
-        "name" : _("Portuguese"),
+        "name" : _("General", "Portuguese"),
         "xkblayout" : "pt",
         "xkbvariant" : None,
         "locale" : "pt_BR.UTF-8",
@@ -185,7 +188,7 @@ locales = {
         },
 
 "nb" : {
-        "name" : _("Norwegian"),
+        "name" : _("General", "Norwegian"),
         "xkblayout" : "no",
         "xkbvariant" : None,
         "locale" : "nb_NO.UTF-8",
@@ -195,7 +198,7 @@ locales = {
         },
 
 "is" : {
-        "name" : _("Icelandic"),
+        "name" : _("General", "Icelandic"),
         "xkblayout" : "is",
         "xkbvariant" : None,
         "locale" : "is_IS.UTF-8",
@@ -205,7 +208,7 @@ locales = {
         },
 
 "pl" : {
-        "name" : _("Polish"),
+        "name" : _("General", "Polish"),
         "xkblayout" : "pl",
         "xkbvariant" : None,
         "locale" : "pl_PL.UTF-8",
@@ -216,7 +219,7 @@ locales = {
         },
 
 "be" : {
-        "name" : _("Belgium"),
+        "name" : _("General", "Belgium"),
         "xkblayout" : "be",
         "xkbvariant" : None,
         "locale" : "be_BY.UTF-8",
@@ -226,7 +229,7 @@ locales = {
         },
 
 "fr" : {
-        "name" : _("French"),
+        "name" : _("General", "French"),
         "xkblayout" : "fr",
         "xkbvariant" : None,
         "locale" : "fr_FR.UTF-8",
@@ -237,7 +240,7 @@ locales = {
         },
 
 "bg" : {
-        "name" : _("Bulgarian"),
+        "name" : _("General", "Bulgarian"),
         "xkblayout" : "bg",
         "xkbvariant" : None,
         "locale" : "bg_BG.UTF-8",
@@ -247,7 +250,7 @@ locales = {
         },
 
 "sl" : {
-        "name" : _("Slovenian"),
+        "name" : _("General", "Slovenian"),
         "xkblayout" : "si",
         "xkbvariant" : None,
         "locale" : "sl_SI.UTF-8",
@@ -257,7 +260,7 @@ locales = {
         },
 
 "hr" : {
-        "name" : _("Croatian"),
+        "name" : _("General", "Croatian"),
         "xkblayout" : "hr",
         "xkbvariant" : None,
         "locale" : "hr_HR.UTF-8",
@@ -267,7 +270,7 @@ locales = {
         },
 
 "de" : {
-        "name" : _("German"),
+        "name" : _("General", "German"),
         "xkblayout" : "de",
         "xkbvariant" : None,
         "locale" : "de_DE.UTF-8",
@@ -278,7 +281,7 @@ locales = {
         },
 
 "da" : {
-        "name" : _("Danish"),
+        "name" : _("General", "Danish"),
         "xkblayout" : "dk",
         "xkbvariant" : None,
         "locale" : "da_DK.UTF-8",
@@ -288,7 +291,7 @@ locales = {
         },
 
 "br" : {
-        "name" : _("Brazilian"),
+        "name" : _("General", "Brazilian"),
         "xkblayout" : "br",
         "xkbvariant" : None,
         "locale" : "pt_BR.UTF-8",
@@ -298,7 +301,7 @@ locales = {
         },
 
 "fi" : {
-        "name" : _("Finnish"),
+        "name" : _("General", "Finnish"),
         "xkblayout" : "fi",
         "xkbvariant" : None,
         "locale" : "fi_FI.UTF-8",
@@ -308,7 +311,7 @@ locales = {
         },
 
 "hu" : {
-        "name" : _("Hungarian"),
+        "name" : _("General", "Hungarian"),
         "xkblayout" : "hu",
         "xkbvariant" : None,
         "locale" : "hu_HU.UTF-8",
@@ -319,7 +322,7 @@ locales = {
         },
 
 "ja" : {
-        "name" : _("Japanese"),
+        "name" : _("General", "Japanese"),
         "xkblayout" : "jp",
         "xkbvariant" : None,
         "locale" : "ja_JP.UTF-8",
@@ -329,7 +332,7 @@ locales = {
         },
 
 "ml" : {
-        "name" : _("Malayalam"),
+        "name" : _("General", "Malayalam"),
         "xkblayout" : "us",
         "xkbvariant" : None,
         "locale" : "ml_IN.UTF-8",
@@ -339,7 +342,7 @@ locales = {
         },
 
 "sv" : {
-        "name" : _("Swedish"),
+        "name" : _("General", "Swedish"),
         "xkblayout" : "se",
         "xkbvariant" : None,
         "locale" : "sv_SE.UTF-8",
@@ -350,7 +353,7 @@ locales = {
         },
 
 "mk" : {
-        "name" : _("Macedonian"),
+        "name" : _("General", "Macedonian"),
         "xkblayout" : "mk",
         "xkbvariant" : None,
         "locale" : "mk_MK.UTF-8",
@@ -360,7 +363,7 @@ locales = {
         },
 
 "sk" : {
-        "name" : _("Slovak"),
+        "name" : _("General", "Slovak"),
         "xkblayout" : "sk",
         "xkbvariant" : None,
         "locale" : "sk_SK.UTF-8",
@@ -370,7 +373,7 @@ locales = {
         },
 
 "uk" : {
-        "name" : _("Ukrainian"),
+        "name" : _("General", "Ukrainian"),
         "xkblayout" : "ua",
         "xkbvariant" : None,
         "locale" : "uk_UA.UTF-8",
@@ -380,7 +383,7 @@ locales = {
         },
 
 "sr" : {
-        "name" : _("Serbian"),
+        "name" : _("General", "Serbian"),
         "xkblayout" : "rs",
         "xkbvariant" : None,
         "locale" : "sr_CS.UTF-8",

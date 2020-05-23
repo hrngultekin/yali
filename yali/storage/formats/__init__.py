@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 import yali.util
 import yali.context as ctx

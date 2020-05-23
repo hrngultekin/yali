@@ -11,10 +11,16 @@
 #
 import copy
 import parted
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QMenu, QTreeWidgetItem, QIcon, QAction
+
+from PyQt5.QtWidgets import QWidget, QMenu, QTreeWidgetItem, QAction
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QIcon
 
 import yali.util
 import yali.context as ctx
@@ -91,33 +97,33 @@ class Widget(QWidget, ScreenWidget):
     def nextCheck(self):
         (errors, warnings) = self.storage.sanityCheck()
         if errors:
-            detailed =  _("The partitioning scheme you requested "
+            detailed =  _("General", "The partitioning scheme you requested "
                           "caused the following critical errors."
                           "You must correct these errors before "
                           "you continue your installation of %s.") \
                          % yali.util.product_name()
 
             comments = "\n\n".join(errors)
-            self.intf.detailedMessageWindow(_("Partitioning Errors"),
+            self.intf.detailedMessageWindow(_("General", "Partitioning Errors"),
                                              detailed, comments, type="error")
             return False
 
         if warnings:
-            detailed = _("The partitioning scheme you requested generated the "
+            detailed = _("General", "The partitioning scheme you requested generated the "
                          "following warnings. Would you like to continue with "
                          "your requested partitioning "
                          "scheme?")
 
             comments = "\n\n".join(warnings)
-            rc = self.intf.detailedMessageWindow(_("Partitioning Warnings"),
+            rc = self.intf.detailedMessageWindow(_("General", "Partitioning Warnings"),
                                                   detailed, comments, type="custom", customIcon="warning",
-                                                  customButtons=[_("Ok"), _("Cancel")], default=1)
+                                                  customButtons=[_("General", "Ok"), _("General", "Cancel")], default=1)
             if rc:
                 return False
 
         formatWarnings = getPreExistFormatWarnings(self.storage)
         if formatWarnings:
-            detailed = _("The following pre-existing devices have "
+            detailed = _("General", "The following pre-existing devices have "
                          "been selected to be formatted, destroying "
                          "all data.")
 
@@ -125,9 +131,9 @@ class Widget(QWidget, ScreenWidget):
             for (device, type, mountpoint) in formatWarnings:
                 comments = comments + "%s         %s         %s\n" % (device, type, mountpoint)
 
-            rc = self.intf.detailedMessageWindow(_("Format Warnings"),
+            rc = self.intf.detailedMessageWindow(_("General", "Format Warnings"),
                                                   detailed, comments, type="custom", customIcon="warning",
-                                                  customButtons=[_("Format"), _("Cancel")], default=1)
+                                                  customButtons=[_("General", "Format"), _("General", "Cancel")], default=1)
             if rc:
                 return False
 
@@ -135,9 +141,9 @@ class Widget(QWidget, ScreenWidget):
 
 
     def backCheck(self):
-        rc = self.intf.messageWindow(_("Warning"), _("All Changes that you made will be removed"),
+        rc = self.intf.messageWindow(_("General", "Warning"), _("General", "All Changes that you made will be removed"),
                                       type="custom", customIcon="warning",
-                                      customButtons=[_("Ok"), _("Cancel")], default=1)
+                                      customButtons=[_("General", "Ok"), _("General", "Cancel")], default=1)
         if not rc:
             self.storage.reset()
             return True
@@ -145,27 +151,27 @@ class Widget(QWidget, ScreenWidget):
 
     def setupMenu(self):
         self.menu = QMenu("New")
-        self.standardDevices = self.menu.addMenu(_("Standard"))
-        self.lvmDevices = self.menu.addMenu(_("LVM"))
-        self.raidDevices = self.menu.addMenu(_("RAID"))
+        self.standardDevices = self.menu.addMenu(_("General", "Standard"))
+        self.lvmDevices = self.menu.addMenu(_("General", "LVM"))
+        self.raidDevices = self.menu.addMenu(_("General", "RAID"))
 
-        self.createPartition = self.standardDevices.addAction(_("Partition"))
-        self.createPartition.setWhatsThis(_("General purpose of partition creation"))
+        self.createPartition = self.standardDevices.addAction(_("General", "Partition"))
+        self.createPartition.setWhatsThis(_("General", "General purpose of partition creation"))
         self.createPartition.setVisible(False)
-        self.createPhysicalVolume = self.lvmDevices.addAction(_("Physical Volume"))
-        self.createPhysicalVolume.setWhatsThis(_("Create LVM formatted partition"))
+        self.createPhysicalVolume = self.lvmDevices.addAction(_("General", "Physical Volume"))
+        self.createPhysicalVolume.setWhatsThis(_("General", "Create LVM formatted partition"))
         self.createPhysicalVolume.setVisible(False)
-        self.createVolumeGroup = self.lvmDevices.addAction(_("Volume Group"))
-        self.createVolumeGroup.setWhatsThis(_("Requires at least 1 free LVM formatted partition"))
+        self.createVolumeGroup = self.lvmDevices.addAction(_("General", "Volume Group"))
+        self.createVolumeGroup.setWhatsThis(_("General", "Requires at least 1 free LVM formatted partition"))
         self.createVolumeGroup.setVisible(False)
-        self.createLogicalVolume = self.lvmDevices.addAction(_("Logical Volume"))
-        self.createLogicalVolume.setWhatsThis(_("Create Logical Volume on selected Volume Group"))
+        self.createLogicalVolume = self.lvmDevices.addAction(_("General", "Logical Volume"))
+        self.createLogicalVolume.setWhatsThis(_("General", "Create Logical Volume on selected Volume Group"))
         self.createLogicalVolume.setVisible(False)
-        self.createRaidMember = self.raidDevices.addAction(_("Member"))
-        self.createRaidMember.setWhatsThis(_("Create Raid formatted partition"))
+        self.createRaidMember = self.raidDevices.addAction(_("General", "Member"))
+        self.createRaidMember.setWhatsThis(_("General", "Create Raid formatted partition"))
         self.createRaidMember.setVisible(False)
-        self.createRaidArray= self.raidDevices.addAction(_("Array"))
-        self.createRaidArray.setWhatsThis(_("Requires at least 2 free Raid formatted partition"))
+        self.createRaidArray= self.raidDevices.addAction(_("General", "Array"))
+        self.createRaidArray.setWhatsThis(_("General", "Requires at least 2 free Raid formatted partition"))
         self.createRaidArray.setVisible(False)
 
         self.ui.newButton.setMenu(self.menu)
@@ -228,7 +234,7 @@ class Widget(QWidget, ScreenWidget):
         vgs = self.storage.vgs
         if vgs:
             volumeGroupsItem = DeviceTreeItem(self.ui.deviceTree)
-            volumeGroupsItem.setName(_("Volume Groups"))
+            volumeGroupsItem.setName(_("General", "Volume Groups"))
             volumeGroupsItem.setExpanded(True)
             for vg in vgs:
                 volumeGroupItem = DeviceTreeItem(volumeGroupsItem)
@@ -241,7 +247,7 @@ class Widget(QWidget, ScreenWidget):
                 # We add a row for the VG free space.
                 if vg.freeSpace > 0:
                     freeLogicalVolumeItem = DeviceTreeItem(volumeGroupItem)
-                    freeLogicalVolumeItem.setName(_("Free"))
+                    freeLogicalVolumeItem.setName(_("General", "Free"))
                     freeLogicalVolumeItem.setSize("%Ld" % vg.freeSpace)
                     freeLogicalVolumeItem.setDevice(None)
                     freeLogicalVolumeItem.setMountpoint("")
@@ -250,7 +256,7 @@ class Widget(QWidget, ScreenWidget):
         raidarrays = self.storage.raidArrays
         if raidarrays:
             raidArraysItem = DeviceTreeItem(self.ui.deviceTree)
-            raidArraysItem.setName(_("Raid Arrays"))
+            raidArraysItem.setName(_("General", "Raid Arrays"))
             raidArraysItem.setExpanded(True)
             for array in raidarrays:
                 raidArrayItem = DeviceTreeItem(raidArraysItem)
@@ -265,7 +271,7 @@ class Widget(QWidget, ScreenWidget):
         disks.sort(key=lambda d: d.name)
         # Disk&Partitions
         drivesItem = DeviceTreeItem(self.ui.deviceTree)
-        drivesItem.setName(_("Hard Drives"))
+        drivesItem.setName(_("General", "Hard Drives"))
         drivesItem.setExpanded(True)
         for disk in disks:
             diskItem = DeviceTreeItem(drivesItem)
@@ -294,14 +300,14 @@ class Widget(QWidget, ScreenWidget):
 
                     if device and device.isExtended:
                         if extendedItem:
-                            raise RuntimeError, _("Can't handle more than "
+                            raise RuntimeError, _("General", "Can't handle more than "
                                                  "one extended partition per disk")
                         extendedItem = partItem = DeviceTreeItem(diskItem)
                         partitionItem = extendedItem
 
                     elif device and device.isLogical:
                         if not extendedItem:
-                            raise RuntimeError, _("Crossed logical partition before extended")
+                            raise RuntimeError, _("General", "Crossed logical partition before extended")
                         partitionItem = DeviceTreeItem(extendedItem)
 
                     else:
@@ -317,12 +323,12 @@ class Widget(QWidget, ScreenWidget):
                     else:
                         # either extended or freespace
                         if partition.type & parted.PARTITION_FREESPACE:
-                            deviceName = _("Free")
+                            deviceName = _("General", "Free")
                             device = partition
                             deviceType = ""
                         else:
                             deviceName = device.name
-                            deviceType = _("Extended")
+                            deviceType = _("General", "Extended")
 
                         partitionItem.setName(deviceName)
                         partitionItem.setType(deviceType)
@@ -348,14 +354,14 @@ class Widget(QWidget, ScreenWidget):
                 doPartitioning(self.storage)
                 rc = 0
             except PartitioningError, msg:
-                self.intf.messageWindow(_("Error Partitioning"), 
-                                        _("Could not allocate requested partitions: %s.") % msg,
+                self.intf.messageWindow(_("General", "Error Partitioning"), 
+                                        _("General", "Could not allocate requested partitions: %s.") % msg,
                                         customIcon="error")
                 rc = -1
             except PartitioningWarning, msg:
-                rc = self.intf.messageWindow(_("Warning Partitioning"),
-                                             _("Warning: %s.") % msg,
-                                             customButtons=[_("Modify Partition"), _("Continue")],
+                rc = self.intf.messageWindow(_("General", "Warning Partitioning"),
+                                             _("General", "Warning: %s.") % msg,
+                                             customButtons=[_("General", "Modify Partition"), _("General", "Continue")],
                                              customIcon="warning")
                 if rc == 1:
                     rc = -1
@@ -410,8 +416,8 @@ class Widget(QWidget, ScreenWidget):
 
 
         """if (not activatePartition and not activateVolumeGroup):
-            self.intf.messageWindow(_("Cannot perform any creation operation"),
-                                    _("Note that the creation operation requires one of the\nfollowing:"
+            self.intf.messageWindow(_("General", "Cannot perform any creation operation"),
+                                    _("General", "Note that the creation operation requires one of the\nfollowing:"
                                       " * Free space in one of the Hard Drives.\n"
                                       " * At least one free physical volume (LVM) partition.\n"
                                       " * At least one Volume Group with free space."),
@@ -469,8 +475,8 @@ class Widget(QWidget, ScreenWidget):
                     self.editPartition(partition, isNew=True, partedPartition=device)
                     return
             else:
-                ctx.interface.messageWindow(_("Partition Selection Warning"),
-                                            _("Please select free physical partition to create new device."),
+                ctx.interface.messageWindow(_("General", "Partition Selection Warning"),
+                                            _("General", "Please select free physical partition to create new device."),
                                             type="warning")
 
 
@@ -480,8 +486,8 @@ class Widget(QWidget, ScreenWidget):
             reason = self.storage.deviceImmutable(device, ignoreProtected=True)
 
             if reason:
-                self.intf.messageWindow(_("Unable To Edit"),
-                                       _("You cannot edit this device:\n\n%s")
+                self.intf.messageWindow(_("General", "Unable To Edit"),
+                                       _("General", "You cannot edit this device:\n\n%s")
                                         % reason,
                                         type="warning")
                 return

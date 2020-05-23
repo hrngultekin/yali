@@ -1,7 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import pyqtSignal, QObject, QSize, Qt
@@ -24,8 +28,8 @@ class RaidEditor(object):
 
         availraidparts = self.parent.storage.unusedRaidMembers(array=self.origrequest)
         if availraidparts < 2:
-            self.intf.messageWindow(_("Invalid Raid Members"),
-                                    _("At least two unused software RAID "
+            self.intf.messageWindow(_("General", "Invalid Raid Members"),
+                                    _("General", "At least two unused software RAID "
                                      "partitions are needed to create "
                                      "a RAID device.\n\n"
                                      "First create at least two partitions "
@@ -35,12 +39,12 @@ class RaidEditor(object):
             return
 
         if isNew:
-            title = _("Make RAID Device")
+            title = _("General", "Make RAID Device")
         else:
             if request.minor is not None:
-                title = _("Edit RAID Device: %s") % request.path
+                title = _("General", "Edit RAID Device: %s") % request.path
             else:
-                title = _("Edit RAID Device")
+                title = _("General", "Edit RAID Device")
 
         self.dialog = Dialog(title, closeButton=False)
         self.dialog.addWidget(RaidWidget(self, request, isNew))
@@ -66,7 +70,7 @@ class RaidEditor(object):
             if active and mountpoint:
                 msg = sanityCheckMountPoint(mountpoint)
                 if msg:
-                    self.intf.messageWindow(_("Mount Point Error"), msg,
+                    self.intf.messageWindow(_("General", "Mount Point Error"), msg,
                                             type="error")
                     continue
 
@@ -80,8 +84,8 @@ class RaidEditor(object):
                         break
 
                 if used:
-                    self.intf.messageWindow(_("Mount point in use"),
-                                            _("The mount point \"%s\" is in "
+                    self.intf.messageWindow(_("General", "Mount point in use"),
+                                            _("General", "The mount point \"%s\" is in "
                                               "use. Please pick another.") %
                                             (mountpoint,),
                                             type="warning")
@@ -94,8 +98,8 @@ class RaidEditor(object):
             # The user has to select some devices to be part of the array.
             if not raidmembers:
                 raidlevel = int(widget.raidLevels.itemData(widget.raidLevels.currentIndex()))
-                self.intf.messageWindow(_("Invalid Raid Members"),
-                                        _("A RAID%(level)d set requires at least %(min_member)d member")
+                self.intf.messageWindow(_("General", "Invalid Raid Members"),
+                                        _("General", "A RAID%(level)d set requires at least %(min_member)d member")
                                         % {"level":raidlevel,
                                            "min_member":raid.get_raid_min_members(raidlevel)},
                                         type="warning")
@@ -122,7 +126,7 @@ class RaidEditor(object):
                                                         totalDevices=len(raidmembers),
                                                         memberDevices=members)
                 except ValueError, msg:
-                    self.intf.messageWindow(_("Invalid Raid Members"), unicode(msg),
+                    self.intf.messageWindow(_("General", "Invalid Raid Members"), unicode(msg),
                                             type="warning")
                     continue
 
@@ -302,5 +306,5 @@ class RaidWidget(QWidget, Ui_RaidWidget):
         else:
             self.mountpointMenu.setEnabled(False)
             self.mountpointMenu.setCurrentIndex(0)
-            #if self.mountpointMenu.findText(_("<Not Applicable>")) != -1:
-            #    self.mountpointMenu.insertItem(0, _("<Not Applicable>"))
+            #if self.mountpointMenu.findText(_("General", "<Not Applicable>")) != -1:
+            #    self.mountpointMenu.insertItem(0, _("General", "<Not Applicable>"))

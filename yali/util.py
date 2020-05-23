@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding:utf-8 -*-
 #
 # Copyright (C) 2011 TUBITAK/UEKAE
 #
@@ -19,9 +20,12 @@ import errno
 import time
 import dbus
 import ConfigParser
-import gettext
 
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import comar
 import pisi
@@ -173,12 +177,29 @@ def isEfi():
     global efi
     if efi is not None:
         return efi
-    
+
     efi = False
     # use current kernel
-    if os.system("dmidecode -t 0 | grep UEFI") == 0:#os.path.exists("/sys/firmware/efi"):
+    if os.path.exists("/sys/firmware/efi"):
         efi = True
 
+    # if os.system("dmidecode -t 0 | grep UEFI") == 0:
+    #     efi = True
+    # elif os.system("efibootmgr | grep EFI") == 0:
+    #     efi = True
+    # elif os.system("dmidecode -t 0 | grep VirtualBox") == 0:
+    #     #print("="*100)
+    #     #print(dir(ctx.storage.partitions[0]))
+    #     for p in  ctx.storage.partitions:
+    #         try:
+    #             print(p.partedPartition.getFlagsAsString().split(", "))
+    #             if "esp" in p.partedPartition.getFlagsAsString().split(", "):
+    #                 efi = True
+    #                 # esp işaretli bölüm olmasına rağmen yeni bir bölüm oluşturmaya zorladı!
+    #                 break
+    #         except:
+    #             pass
+    print(efi)
     return efi
 
 def getArch():
@@ -471,8 +492,8 @@ def writeLocaleFromCmdline():
     locale_file_path = os.path.join(ctx.consts.target_dir, "etc/env.d/03locale")
     f = open(locale_file_path, "w")
 
-    f.write("LANG=%s\n" % yali.localedata.locales[ctx.consts.lang]["locale"])
-    f.write("LC_ALL=%s\n" % yali.localedata.locales[ctx.consts.lang]["locale"])
+    f.write("LANG=%s\n" % yali.localedata.locales[ctx.lang]["locale"])
+    f.write("LC_ALL=%s\n" % yali.localedata.locales[ctx.lang]["locale"])
 
 def setKeymap(keymap, variant=None, root=False):
     ad = ""
@@ -499,10 +520,10 @@ def writeKeymap(keymap):
         if l.strip().startswith('keymap=') or l.strip().startswith('# keymap='):
             l = 'keymap="%s"\n' % keymap
         if l.strip().startswith('language=') or l.strip().startswith('# language='):
-            if ctx.consts.lang == "pt":
+            if ctx.lang == "pt":
                 l = 'language="pt_BR"\n'
             else:
-                l = 'language="%s"\n' % ctx.consts.lang
+                l = 'language="%s"\n' % ctx.lang
         lines.append(l)
 
     open(mudur_file_path, "w").writelines(lines)
@@ -521,12 +542,12 @@ def parse_branding_screens(release_file):
         document = piksemel.parse(release_file)
     except OSError, msg:
         if msg.errno == 2:
-            raise yali.Error, _("Release file is missing")
+            raise yali.Error, _("General", "Release file is missing")
     except piksemel.ParseError:
-        raise yali.Error, _("Release file is inconsistent")
+        raise yali.Error, _("General", "Release file is inconsistent")
 
     if document.name() != "Release":
-        raise yali.Error, _("Invalid xml file")
+        raise yali.Error, _("General", "Invalid xml file")
 
     screens = {}
     screens_tag = document.getTag("screens")
@@ -564,12 +585,12 @@ def parse_branding_slideshows(release_file):
         document = piksemel.parse(release_file)
     except OSError, msg:
         if msg.errno == 2:
-            raise yali.Error, _("Release file is missing")
+            raise yali.Error, _("General", "Release file is missing")
     except piksemel.ParseError:
-        raise yali.Error, _("Release file is inconsistent")
+        raise yali.Error, _("General", "Release file is inconsistent")
 
     if document.name() != "Release":
-        raise yali.Error, _("Invalid xml file")
+        raise yali.Error, _("General", "Invalid xml file")
 
     slideshows = []
     slideshows_tag = document.getTag("slideshows")
@@ -710,4 +731,3 @@ def get_collections():
             packageCollection.append(PackageCollection(id, title, description, icon, translations, default))
 
     return packageCollection
-

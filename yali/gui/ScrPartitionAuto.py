@@ -9,11 +9,15 @@
 #
 # Please read the COPYING file.
 #
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-_ = gettext.translation('yali', fallback=True).ugettext
 
-from PyQt5.Qt import QWidget, pyqtSignal
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import pyqtSignal
 
 import yali.context as ctx
 from yali.gui import ScreenWidget
@@ -41,8 +45,8 @@ class Widget(QWidget, ScreenWidget):
                                                                                          partition.format.resizable and
                                                                                          partition.size > ctx.consts.min_root_size]
             if not len(resizable_partitions):
-                self.intf.messageWindow(_("Warning"),
-                                        _("No partitions are available to resize. Only physical\n"
+                self.intf.messageWindow(_("General", "Warning"),
+                                        _("General", "No partitions are available to resize. Only physical\n"
                                           "partitions which size is greater than %s MB can be resized.")
                                         % ctx.consts.min_root_size, type="warning")
                 ctx.mainScreen.disableNext()
@@ -57,7 +61,7 @@ class Widget(QWidget, ScreenWidget):
 
     def shown(self):
         if len(self.storage.clearPartDisks) > 1:
-            self.ui.autopartType.item(USE_ALL_SPACE).setText(_("Use All Disks"))
+            self.ui.autopartType.item(USE_ALL_SPACE).setText(_("General", "Use All Disks"))
         self.setPartitioningType()
 
     def execute(self):

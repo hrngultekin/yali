@@ -10,9 +10,11 @@
 # Please read the COPYING file.
 #
 import pardus.xorg
-import gettext
-
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 from PyQt5.QtWidgets import QWidget, QLineEdit
 from PyQt5.QtCore import pyqtSignal, QTimer
@@ -28,7 +30,7 @@ from yali.gui.Ui.rootpasswidget import Ui_RootPassWidget
 
 class Widget(QWidget, ScreenWidget):
     name = "admin"
-    finished=pyqtSignal()
+    finished = pyqtSignal()
     def __init__(self):
         QWidget.__init__(self)
         self.ui = Ui_RootPassWidget()
@@ -90,7 +92,7 @@ class Widget(QWidget, ScreenWidget):
                 else:
                     ctx.mainScreen.step_increment = 1
             else:
-                self.pds_messagebox.setMessage(_("Storage Devices initialising..."))
+                self.pds_messagebox.setMessage(_("General", "Storage Devices initialising..."))
                 self.pds_messagebox.animate(start=MIDCENTER, stop=MIDCENTER)
                 ctx.mainScreen.step_increment = 0
                 self.pthread.start()
@@ -149,7 +151,7 @@ class Widget(QWidget, ScreenWidget):
 
         if password and password == password_confirm:
             if len(password) < 4:
-                self.intf.informationWindow.update(_('Password is too short.'), type="error")
+                self.intf.informationWindow.update(_("General", 'Password is too short.'), type="error")
                 self.pass_valid = False
             else:
                 self.intf.informationWindow.hide()
@@ -157,12 +159,12 @@ class Widget(QWidget, ScreenWidget):
         else:
             self.pass_valid = False
             if password_confirm:
-                self.intf.informationWindow.update(_('Passwords do not match.'), type="error")
+                self.intf.informationWindow.update(_("General", 'Passwords do not match.'), type="error")
 
         if password.lower()=="root" or password_confirm.lower()=="root":
             self.pass_valid = False
             if password_confirm:
-                self.intf.informationWindow.update(_('Do not use your username as your password.'), type="error")
+                self.intf.informationWindow.update(_("General", 'Do not use your username as your password.'), type="error")
 
         if self.pass_valid:
             self.intf.informationWindow.hide()
@@ -172,7 +174,7 @@ class Widget(QWidget, ScreenWidget):
     def slotHostnameChanged(self, hostname):
         if len(hostname) > 64:
             self.host_valid = False
-            self.intf.informationWindow.update(_('Hostname cannot be longer than 64 characters.'), type="error")
+            self.intf.informationWindow.update(_("General", 'Hostname cannot be longer than 64 characters.'), type="error")
             self.update()
             return
 
@@ -185,7 +187,7 @@ class Widget(QWidget, ScreenWidget):
         self.host_valid = yali.util.is_text_valid(hostname)
 
         if not self.host_valid:
-            self.intf.informationWindow.update(_('Hostname contains invalid characters.'), type="error")
+            self.intf.informationWindow.update(_("General", 'Hostname contains invalid characters.'), type="error")
         else:
             self.intf.informationWindow.hide()
         self.update()

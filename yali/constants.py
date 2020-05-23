@@ -71,7 +71,7 @@ class Constants:
         self.__c.target_dir = "/mnt/target"
         self.__c.session_file = os.path.join(self.__c.target_dir, "root/session.xml")
         self.__c.dbus_socket = "run/dbus/system_bus_socket"
-        self.__c.source_dir = os.path.join(self.__c.root_dir, "mnt/cdrom")
+        self.__c.source_dir = os.path.join(self.__c.root_dir, "bootmnt") if os.path.exists(os.path.join(self.__c.root_dir, "bootmnt")) else os.path.join(self.__c.root_dir, "mnt/cdrom")
         self.__c.tmp_mnt_dir = os.path.join(self.__c.root_dir,"tmp/check")
         self.__c.repo_uri = os.path.join(self.__c.source_dir, "repo/pisi-index.xml.bz2")
         self.__c.pisi_collection_file = os.path.join(self.__c.data_dir, "data/index/collection.xml")
@@ -83,7 +83,8 @@ class Constants:
         self.__c.pisilinux_repo_uri = "@REPO_URI@"
         self.__c.pisi_index_file = os.path.join(self.__c.data_dir,"data/pisi-index.xml.bz2")
         self.__c.pisi_index_file_sum = os.path.join(self.__c.data_dir,"data/pisi-index.xml.bz2.sha1sum")
-        self.__c.lang = locale.getdefaultlocale()[0][:2]
+        self.__c.lang_path = os.path.join(self.__c.data_dir, "lang")
+        #self.__c.lang = locale.getdefaultlocale()[0][:2]
 
     def __getattr__(self, attr):
         return getattr(self.__c, attr)

@@ -6,10 +6,12 @@ import sys
 import math
 from parted import fileSystemType
 import pardus.sysutils
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 import yali.util
 import yali.sysutils
@@ -225,7 +227,7 @@ class Filesystem(Format):
         return False
 
     def _fsckErrorMessage(self, rc):
-        return _("Unknown return code: %d.") % (rc,)
+        return _("General", "Unknown return code: %d.") % (rc,)
 
     def doMigrate(self, intf=None):
         if not self.exists:
@@ -244,7 +246,7 @@ class Filesystem(Format):
 
         w = None
         if intf:
-            w = intf.progressWindow(_("Migrating %s filesystem on %s") % (self.type, self.device))
+            w = intf.progressWindow(_("General", "Migrating %s filesystem on %s") % (self.type, self.device))
 
         argv = self._migrateOptions[:]
         argv.append(self.device)
@@ -296,7 +298,7 @@ class Filesystem(Format):
         argv = self._getFormatOptions(options=options)
         w = None
         if intf:
-            w = intf.progressWindow(_("Creating %(type)s filesystem on %(device)s") % {"type":self.type, "device":self.device})
+            w = intf.progressWindow(_("General", "Creating %(type)s filesystem on %(device)s") % {"type":self.type, "device":self.device})
 
         try:
             rc = yali.util.run_batch(self.mkfs, argv)[0]
@@ -344,7 +346,7 @@ class Filesystem(Format):
                      % (self.device, self.targetSize))
         w = None
         if intf:
-            w = intf.progressWindow(_("Resizing filesystem on %s")
+            w = intf.progressWindow(_("General", "Resizing filesystem on %s")
                                     % (self.device,))
 
         try:
@@ -375,7 +377,7 @@ class Filesystem(Format):
 
         w = None
         if intf:
-            w = intf.progressWindow(_("Checking filesystem on %s")
+            w = intf.progressWindow(_("General", "Checking filesystem on %s")
                                     % (self.device))
 
         try:
@@ -384,17 +386,17 @@ class Filesystem(Format):
             raise FilesystemError("filesystem check failed: %s" % e, self.device)
         else:
             if self._fsckFailed(rc):
-                hdr = _("%(type)s filesystem check failure on %(device)s: ") % \
+                hdr = _("General", "%(type)s filesystem check failure on %(device)s: ") % \
                         {"type":self.type, "device":self.device}
                 msg = self._fsckErrorMessage(rc)
                 if intf:
-                    help = _("Errors like this usually mean there is a problem "
+                    help = _("General", "Errors like this usually mean there is a problem "
                              "with the filesystem that will require user "
                              "interaction to repair. Restart installation "
                              "after you have corrected the problems on the "
                              "filesystem.")
 
-                    intf.messageWindow(_("Unrecoverable Error"),
+                    intf.messageWindow(_("General", "Unrecoverable Error"),
                                        hdr + "<br><br>" + msg + "<br><br>" + help,
                                        customIcon='error')
                 else:
@@ -503,7 +505,7 @@ class Filesystem(Format):
         argv = []
         argv.extend(self.labelOptions)
         argv.extend([self.device, label])
-        return argv 
+        return argv
 
     def writeLabel(self, label):
         """ Create a label for this filesystem. """
@@ -688,11 +690,11 @@ class Ext2Filesystem(Filesystem):
     _resizefs = "resize2fs"
     _labelfs = "e2label"
     _fsck = "e2fsck"
-    _fsckErrors = {4: _("File system errors left uncorrected."),
-                   8: _("Operational error."),
-                   16: _("Usage or syntax error."),
-                   32: _("e2fsck cancelled by user request."),
-                   128: _("Shared library error.")}
+    _fsckErrors = {4: _("General", "File system errors left uncorrected."),
+                   8: _("General", "Operational error."),
+                   16: _("General", "Usage or syntax error."),
+                   32: _("General", "e2fsck cancelled by user request."),
+                   128: _("General", "Shared library error.")}
     _formattable = True
     _supported = True
     _resizable = True
@@ -852,9 +854,9 @@ class FATFilesystem(Filesystem):
     _mkfs = "mkdosfs"
     _labelfs = "dosfslabel"
     _fsck = "dosfsck"
-    _fsckErrors = {1: _("Recoverable errors have been detected or dosfsck has "
+    _fsckErrors = {1: _("General", "Recoverable errors have been detected or dosfsck has "
                         "discovered an internal inconsistency."),
-                   2: _("Usage error.")}
+                   2: _("General", "Usage error.")}
     _supported = True
     _formattable = True
     _mountOptions = ["umask=0077", "shortname=winnt"]
@@ -880,6 +882,7 @@ class EFIFilesystem(FATFilesystem):
     _bootable = True
     _minSize = 50
     _maxSize = 256
+
 
     @property
     def supported(self):

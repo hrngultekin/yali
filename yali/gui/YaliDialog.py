@@ -10,33 +10,20 @@
 # Please read the COPYING file.
 #
 import random
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QSpacerItem
-from PyQt5.QtWidgets import QSizePolicy
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QDialog
-from PyQt5.QtCore import QObject
-from PyQt5.QtCore import QMetaObject
-from PyQt5.QtWidgets import QFrame
-from PyQt5.QtGui import QPainter
-from PyQt5.QtGui import QColor
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QShortcut
-from PyQt5.QtWidgets import QGridLayout
-from PyQt5.QtGui import QMovie
-from PyQt5.QtCore import QTimer
-from PyQt5.QtCore import QBasicTimer
+from PyQt5.QtWidgets import (QWidget, QHBoxLayout, QVBoxLayout, QLabel, QSpacerItem, QSizePolicy,
+                             QPushButton, QDialog, QFrame, QMessageBox, QShortcut, QGridLayout)
+
+from PyQt5.QtCore import (Qt, pyqtSignal, QObject, QMetaObject, QSize, QTimer, QBasicTimer)
+
+from PyQt5.QtGui import (QPainter, QColor, QPixmap, QMovie)
 
 import pisi
 import yali
@@ -91,8 +78,11 @@ class windowTitle(QFrame):
 
 class Dialog(QDialog):
     def __init__(self, title, widget=None, closeButton=True, keySequence=None, isDialog=False, icon=None):
-        QDialog.__init__(self, ctx.mainScreen)
+        super(Dialog, self).__init__(ctx.mainScreen)
         self.setObjectName("dialog")
+
+        # WARNING: set from config or yali.context (ctx)
+        self.__use_title = False
 
         self.isDialog = isDialog
         self.layout = QVBoxLayout()
@@ -104,11 +94,11 @@ class Dialog(QDialog):
                                   QDialog#dialog {background-image:url(':/images/%s.png');
                                                   background-repeat:no-repeat;
                                                   background-position: top left; padding-left:500px;} """ % icon)
-
-        self.windowTitle = windowTitle(self, closeButton)
-        self.setTitle(title)
-        #self.layout.setMargin(0)
-        self.layout.addWidget(self.windowTitle)
+        if self.__use_title:
+            self.windowTitle = windowTitle(self, closeButton)
+            self.setTitle(title)
+            #self.layout.setMargin(0)
+            self.layout.addWidget(self.windowTitle)
 
         if widget:
             self.addWidget(widget)
@@ -123,8 +113,9 @@ class Dialog(QDialog):
                     pass
             
 
-        if closeButton:
-            self.windowTitle.pushButton.clicked.connect(self.reject)
+        if self.__use_title:
+            if closeButton:
+                self.windowTitle.pushButton.clicked.connect(self.reject)
 
         if keySequence:
             shortCut = QShortcut(keySequence, self)
@@ -134,7 +125,8 @@ class Dialog(QDialog):
         self.resize(10,10)
 
     def setTitle(self, title):
-        self.windowTitle.label.setText(title)
+        if self.__use_title:
+            self.windowTitle.label.setText(title)
 
     def addWidget(self, widget):
         self.content = widget
@@ -146,6 +138,7 @@ class Dialog(QDialog):
         self.layout.addLayout(self.wlayout)
 
     def setCentered(self):
+        print(type(ctx.mainScreen))
         self.move(ctx.mainScreen.width()/2 - self.width()/2,
                   ctx.mainScreen.height()/2 - self.height()/2)
 
@@ -214,7 +207,7 @@ class MessageWindow:
 
         self.msgBox.setDefaultButton(default)
 
-        self.dialog = Dialog(_(title), self.msgBox, closeButton=False, isDialog=True, icon=icon)
+        self.dialog = Dialog(_("General", title), self.msgBox, closeButton=False, isDialog=True, icon=icon)
         self.dialog.resize(QSize(0,0))
         if run:
             self.run(destroyAfterRun)
@@ -223,9 +216,9 @@ class MessageWindow:
         self.rc = self.dialog.exec_()
         if self.msgBox.clickedButton():
             if not self.doCustom:
-                if self.msgBox.clickedButton().text() in [_("Ok"), _("Yes")]:
+                if self.msgBox.clickedButton().text() in [_("General", "Ok"), _("General", "Yes")]:
                     self.rc = 1
-                elif self.msgBox.clickedButton().text() in [_("Cancel"), _("No")]:
+                elif self.msgBox.clickedButton().text() in [_("General", "Cancel"), _("General", "No")]:
                     self.rc = 0
             else:
                 if self.msgBox.clickedButton().text() in self.customButtons:
@@ -239,21 +232,21 @@ class MessageWindow:
 def QuestionDialog(title, text, info = None, dontAsk = False):
     msgBox = QMessageBox()
 
-    buttonYes = msgBox.addButton(_("Yes"), QMessageBox.ActionRole)
-    buttonNo = msgBox.addButton(_("No"), QMessageBox.ActionRole)
+    buttonYes = msgBox.addButton(_("General", "Yes"), QMessageBox.ActionRole)
+    buttonNo = msgBox.addButton(_("General", "No"), QMessageBox.ActionRole)
 
     answers = {buttonYes:"yes",
                buttonNo :"no"}
     if dontAsk:
-        buttonDontAsk = msgBox.addButton(_("Don't ask again"), QMessageBox.ActionRole)
+        buttonDontAsk = msgBox.addButton(_("General", "Don't ask again"), QMessageBox.ActionRole)
         answers[buttonDontAsk] = "dontask"
 
     msgBox.setText(text)
     if not info:
-        info = _("Do you want to continue?")
+        info = _("General", "Do you want to continue?")
     msgBox.setInformativeText(info)
 
-    dialog = Dialog(_(title), msgBox, closeButton = False, isDialog = True, icon="question")
+    dialog = Dialog(_("General", title), msgBox, closeButton = False, isDialog = True, icon="question")
     dialog.resize(300,120)
     dialog.exec_()
 
@@ -265,9 +258,9 @@ def QuestionDialog(title, text, info = None, dontAsk = False):
 
 def InfoDialog(text, button=None, title=None, icon="info"):
     if not title:
-        title = _("Information")
+        title = _("General", "Information")
     if not button:
-        button = _("OK")
+        button = _("General", "OK")
 
     msgBox = QMessageBox()
 
@@ -275,7 +268,7 @@ def InfoDialog(text, button=None, title=None, icon="info"):
 
     msgBox.setText(text)
 
-    dialog = Dialog(_(title), msgBox, closeButton = False, isDialog = True, icon = icon)
+    dialog = Dialog(_("General", title), msgBox, closeButton = False, isDialog = True, icon = icon)
     dialog.resize(300,120)
     dialog.exec_()
     ctx.mainScreen.processEvents()
@@ -459,7 +452,7 @@ class ExceptionWindow:
     def __init__(self, error, traceback):
         self.rc = None
         self.dialog = None
-        self.dialog = Dialog(_("Error reporting"), ExceptionWidget(traceback, rebootButton=True), icon="error")
+        self.dialog = Dialog(_("General", "Error reporting"), ExceptionWidget(traceback, rebootButton=True), icon="error")
         self.dialog.resize(300,160)
         self.run()
 

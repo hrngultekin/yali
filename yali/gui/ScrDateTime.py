@@ -10,11 +10,14 @@
 # Please read the COPYING file.
 #
 
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 from PyQt5.QtWidgets import QWidget, QComboBox
-from PyQt5.QtCore import pyqtSignal, QTimer, QDate, QTime
+from PyQt5.QtCore import pyqtSignal, QTimer, QDate, QTime, QLocale
 
 from pds.thread import PThread
 from pds.gui import PMessageBox, MIDCENTER, CURRENT, OUT
@@ -45,7 +48,7 @@ class Widget(QWidget, ScreenWidget):
         self.countries = []
 
         for country, data in yali.localedata.locales.items():
-            if country == ctx.consts.lang:
+            if country == ctx.lang:
                 if data.has_key("timezone"):
                     ctx.installData.timezone = data["timezone"]
 
@@ -78,6 +81,48 @@ class Widget(QWidget, ScreenWidget):
         self.pds_messagebox.enableOverlay()
 
         self.timer.start(1000)
+        
+        ctx.mainScreen.currentLanguageChanged.connect(self.retranslateUi)
+        ctx.mainScreen.currentLanguageChanged.connect(self.changeCountry)
+        ctx.mainScreen.currentLanguageChanged.connect(self.updateClock)
+        self.ui.countryList.currentIndexChanged[str].connect(self.setDateFormat)
+        
+    def changeCountry(self):
+        data = yali.localedata.locales[ctx.lang.split("_")[0]]
+        
+        if data.has_key("timezone"):
+            ctx.installData.timezone = data["timezone"]
+            
+        # Append continents and countries the time zone dictionary
+        self.createTZDictionary()
+
+        # Sort continent list
+        self.sortContinents()
+
+        # Append sorted continents to combobox
+        self.loadContinents()
+
+        # Load current continents country list
+        self.getCountries(self.current_zone["continent"])
+        
+        # Highlight the current zone
+        self.index = self.ui.continentList.findText(self.current_zone["continent"])
+        self.ui.continentList.setCurrentIndex(self.index)
+
+        self.index = self.ui.countryList.findText(self.current_zone["country"])
+        self.ui.countryList.setCurrentIndex(self.index)
+        
+    def setDateFormat(self, country):
+        #isCountry = False
+        for c, d in yali.localedata.locales.items():
+            if d.has_key("timezone"):
+                if d["timezone"].endswith(country):
+                    country = c
+                    #isCountry = True
+        #if not isCountry:
+            #country = "tr"
+        self.ui.calendarWidget.setDisplayFormat(QLocale(country).dateFormat(QLocale.ShortFormat))
+        
 
     def __initSignals__(self):
         self.ui.timeEdit.timeChanged[QTime].connect(self.timerStop)
@@ -130,7 +175,7 @@ class Widget(QWidget, ScreenWidget):
     def getCountries(self, continent):
         # Countries of the selected continent
         countries = self.tz_dict[str(continent)]
-
+        
         self.ui.countryList.clear()
 
         for country, zone in countries:
@@ -167,7 +212,7 @@ class Widget(QWidget, ScreenWidget):
         pass
 
     def setTime(self):
-        ctx.interface.informationWindow.update(_("Adjusting time settings"))
+        ctx.interface.informationWindow.update(_("General", "Adjusting time settings"))
         date = self.ui.calendarWidget.date()
         time = self.ui.timeEdit.time()
         args = "%02d%02d%02d%02d%04d.%02d" % (date.month(), date.day(),
@@ -206,7 +251,7 @@ class Widget(QWidget, ScreenWidget):
                     ctx.mainScreen.step_increment = 1
                 return True
             else:
-                self.pds_messagebox.setMessage(_("Storage Devices initialising..."))
+                self.pds_messagebox.setMessage(_("General", "Storage Devices initialising..."))
                 self.pds_messagebox.animate(start=MIDCENTER, stop=MIDCENTER)
                 ctx.mainScreen.step_increment = 0
                 self.pthread.start()
@@ -234,3 +279,9 @@ class Widget(QWidget, ScreenWidget):
             ctx.mainScreen.slotNext(dry_run=True)
         else:
             ctx.mainScreen.enableBack()
+            
+            
+    def retranslateUi(self):
+        self.ui.retranslateUi(self)
+        
+        

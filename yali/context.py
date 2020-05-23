@@ -13,6 +13,8 @@ import yali.flags
 import yali.constants
 import yali.installdata
 
+import locale
+
 flags = yali.flags.Flags()
 consts = yali.constants.Constants()
 installData = yali.installdata.InstallData()
@@ -64,3 +66,5 @@ link = None
 mountCount = {}
 
 collections = None
+
+lang = locale.getdefaultlocale()[0][:2]

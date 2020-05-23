@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 
 
-import gettext
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 from yali.storage.devices.device  import Device
 

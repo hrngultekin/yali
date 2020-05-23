@@ -9,10 +9,14 @@
 #
 # Please read the COPYING file.
 #
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QVariant
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import pyqtSignal, QVariant
 
 import yali.util
 import yali.localedata
@@ -46,8 +50,8 @@ class Widget(QWidget, ScreenWidget):
                     i += 1
             else:
                 self.ui.keyboard_list.addItem(data["name"], QVariant(data))
-            if ctx.consts.lang == country:
-                if ctx.consts.lang == "tr":
+            if ctx.lang == country:
+                if ctx.lang == "tr":
                     self.default_layout_index = index + 1
                 else:
                     self.default_layout_index = index
@@ -57,7 +61,25 @@ class Widget(QWidget, ScreenWidget):
         self.ui.keyboard_list.setCurrentIndex(self.default_layout_index)
 
         self.ui.keyboard_list.currentIndexChanged[int].connect(self.slotLayoutChanged)
-
+        
+        ctx.mainScreen.currentLanguageChanged.connect(self.retranslateUi)
+        ctx.mainScreen.currentLanguageChanged.connect(self.changeCountry)
+        
+    def changeCountry(self):
+        countries = sorted([country for country in yali.localedata.locales.keys()])
+        
+        index = countries.index(ctx.lang.split("_")[0])
+        
+        
+        if ctx.lang == "tr":
+            self.default_layout_index = index + 1
+        else:
+            self.default_layout_index = index
+        
+        
+        self.ui.keyboard_list.setCurrentIndex(self.default_layout_index)
+        
+        
     def shown(self):
         self.slotLayoutChanged()
 
@@ -69,7 +91,7 @@ class Widget(QWidget, ScreenWidget):
         ctx.installData.keyData = keymap
         ctx.interface.informationWindow.hide()
         if "," in keymap["xkblayout"]:
-            message = _("Use Alt-Shift to toggle between alternative keyboard layouts")
+            message = _("General", "Use Alt-Shift to toggle between alternative keyboard layouts")
             ctx.interface.informationWindow.update(message, type="warning")
         else:
             ctx.interface.informationWindow.hide()
@@ -80,5 +102,13 @@ class Widget(QWidget, ScreenWidget):
         ctx.interface.informationWindow.hide()
         ctx.logger.debug("Selected keymap is : %s" % ctx.installData.keyData["name"])
         return True
+    
+    def retranslateUi(self):
+        self.ui.retranslateUi(self)
+        
+        for i in range(self.ui.keyboard_list.count()):
+            self.ui.keyboard_list.setItemText(i, _("General", self.ui.keyboard_list.itemData(i)["name"]))
+            
+        
 
 

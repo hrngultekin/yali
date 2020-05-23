@@ -1,4 +1,4 @@
-
+# -*- coding:utf-8 -*-
 #
 # Copyright (C) 2005-2010 TUBITAK/UEKAE
 #
@@ -15,9 +15,12 @@ import re
 import time
 import dbus
 import shutil
-import gettext
 
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import yali.util
 import yali.users
@@ -122,7 +125,7 @@ def setupUsers():
 
                 user_dir_id = os.stat(user_dir)[4]
                 if not user_dir_id == user_id:
-                    ctx.interface.informationWindow.update(_("Preparing home directory for %s...") % user.username)
+                    ctx.interface.informationWindow.update(_("General", "Preparing home directory for %s...") % user.username)
                     yali.util.run_batch("chown", ["-R", "%d:100" % user_id, user_dir])
                     ctx.interface.informationWindow.hide()
 
@@ -315,3 +318,5 @@ def installBootloader():
     else:
         ctx.logger.info("Bootloader installation succesed")
         return True
+
+

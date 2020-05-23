@@ -119,6 +119,7 @@ def getXmlObject(path):
 def getPackages(tag=None, value=None, index=None):
     if not index:
         index = os.path.join(ctx.consts.source_dir, "repo/pisi-index.xml.bz2")
+    print(index)
     if index.endswith("bz2"):
         piksemelObj = piksemel.parseString(bz2.decompress(file(index).read()))
     else:
@@ -159,7 +160,7 @@ def getNeededKernel(type, index):
     return mergePackagesWithRepoPath(filter(lambda x: x.split(',')[1].startswith(ctx.kernels[type]), getPackages("PartOf", "kernel", index)))
 
 def getNotNeededLanguagePackages():
-    return mergePackagesWithRepoPath(filter(lambda x: not x.split(',')[1].split(':')[1].startswith((ctx.consts.lang, "en")), getPackages("IsA", "locale:")))
+    return mergePackagesWithRepoPath(filter(lambda x: not x.split(',')[1].split(':')[1].startswith((ctx.lang, "en")), getPackages("IsA", "locale:")))
 
 def getBasePackages():
     systemBase = getPackages("PartOf", "system.base")

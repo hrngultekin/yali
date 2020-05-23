@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 import os
 import resource
-import gettext
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import yali.util
 from yali.storage.library import devicemapper

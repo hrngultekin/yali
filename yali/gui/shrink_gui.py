@@ -1,9 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import math
-import gettext
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import *
@@ -20,7 +23,7 @@ class ShrinkEditor:
         self.storage = storage
         self.intf = parent.intf
         self.parent = parent
-        self.dialog = Dialog(_("Partitions to Shrink"), closeButton=False)
+        self.dialog = Dialog(_("General", "Partitions to Shrink"), closeButton=False)
         self.dialog.addWidget(ShrinkWidget(self))
         self.dialog.resize(QSize(0,0))
 
@@ -44,8 +47,8 @@ class ShrinkEditor:
             try:
                 operations.append(OperationResizeFormat(request, newsize))
             except ValueError as e:
-                self.intf.messageWindow(_("Resize FileSystem Error"),
-                                        _("%(device)s: %(msg)s") %
+                self.intf.messageWindow(_("General", "Resize FileSystem Error"),
+                                        _("General", "%(device)s: %(msg)s") %
                                         {'device': request.format.device, 'msg': e.message},
                                         type="error")
                 continue
@@ -53,8 +56,8 @@ class ShrinkEditor:
             try:
                 operations.append(OperationResizeDevice(request, newsize))
             except ValueError as e:
-                self.intf.messageWindow(_("Resize Device Error"),
-                                              _("%(name)s: %(msg)s") %
+                self.intf.messageWindow(_("General", "Resize Device Error"),
+                                              _("General", "%(name)s: %(msg)s") %
                                                {'name': request.name, 'msg': e.message},
                                                type="warning")
                 continue

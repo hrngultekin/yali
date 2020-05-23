@@ -5,9 +5,12 @@ import os
 import parted
 import block
 
-import gettext
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 import yali.baseudev
 import yali.context as ctx
@@ -366,7 +369,7 @@ class Partition(Device):
 
         w = None
         if intf:
-            w = intf.progressWindow(_("Creating device %s") % (self.path,))
+            w = intf.progressWindow(_("General", "Creating device %s") % (self.path,))
 
 
         try:

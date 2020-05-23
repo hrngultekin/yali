@@ -12,8 +12,13 @@
 import os
 import logging
 import logging.handlers
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
+
 
 import yali.context as ctx
 

@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 import yali.context as ctx
 from yali.util import numeric_type
@@ -57,7 +59,7 @@ class RaidArray(Device):
         # For new arrays check if we have enough members
         if (not exists and parents and
                 len(parents) < raid.get_raid_min_members(self.level)):
-            raise ValueError, _("A RAID%(level)d set requires at least %(min_member)d member") % \
+            raise ValueError, _("General", "A RAID%(level)d set requires at least %(min_member)d member") % \
                                 {"level":self.level, "min_member":raid.get_raid_min_members(self.level)}
 
         self.uuid = uuid
@@ -419,7 +421,7 @@ class RaidArray(Device):
 
         w = None
         if intf:
-            w = intf.progressWindow(_("Creating device %s") % (self.path,))
+            w = intf.progressWindow(_("General", "Creating device %s") % (self.path,))
 
         try:
             self.createParents()

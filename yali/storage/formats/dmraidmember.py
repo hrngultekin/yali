@@ -1,11 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import os
-import gettext
+
 from parted import PARTITION_RAID
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 from yali.storage.library import raid
 from yali.storage.formats import Format, FormatError, register_device_format
@@ -16,7 +19,7 @@ class DMRaidMemberError(FormatError):
 class DMRaidMember(Format):
     """ A dmraid member disk. """
     _type = "dmraidmember"
-    _name = _("dm-raid member device")
+    _name = _("General", "dm-raid member device")
     # XXX This looks like trouble.
     #
     #     Maybe a better approach is a RaidMember format with subclass

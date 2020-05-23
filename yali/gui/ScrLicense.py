@@ -11,10 +11,15 @@
 #
 import os
 import codecs
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QTextBrowser
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import  QTextBrowser
+from PyQt5.QtCore import pyqtSignal
 
 import yali.context as ctx
 from yali.gui import ScreenWidget, GUIError
@@ -23,9 +28,9 @@ from yali.gui.Ui.license import Ui_LicenseWidget
 
 class Widget(QWidget, ScreenWidget):
     name = "license"
-    finished=pyqtSignal()
+    finished = pyqtSignal()
     def __init__(self):
-        QWidget.__init__(self)
+        super(QWidget, self).__init__()
         self.ui = Ui_LicenseWidget()
         self.ui.setupUi(self)
 
@@ -69,13 +74,13 @@ class LicenseBrowser(QTextBrowser):
             raise GUIError(msg)
 
     def loadFile(self):
-        license = os.path.join(ctx.consts.source_dir, "license", "license-%s.txt" % ctx.consts.lang)
+        license = os.path.join(ctx.consts.source_dir, "license", "license-%s.txt" % ctx.lang)
 
         if not os.path.exists(license):
             license = os.path.join(ctx.consts.source_dir, "license/license-en.txt")
 
         if os.path.exists(license):
             return license
-        raise GUIError(_("License text could not be found."))
+        raise GUIError(_("General", "License text could not be found."))
 
 

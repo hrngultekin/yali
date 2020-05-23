@@ -10,10 +10,14 @@
 # Please read the COPYING file.
 #
 
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import pyqtSignal
 
 import yali.context as ctx
 from yali.kahya import kahya
@@ -75,7 +79,7 @@ class Widget(QWidget, ScreenWidget):
                 # find usable storage devices
                 # initialize all storage devices
                 if not yali.storage.initDevices():
-                    raise GUIError, _("No storage device found.")
+                    raise GUIError, _("General", "No storage device found.")
 
                 devices = []
                 for dev in yali.storage.devices:

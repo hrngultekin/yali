@@ -14,7 +14,16 @@
    <string/>
   </property>
   <layout class="QGridLayout">
-   <property name="margin">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
     <number>0</number>
    </property>
    <item row="0" column="0">
@@ -57,6 +66,19 @@ border-bottom: 1px solid rgba(255, 255, 255, 75);/*white*/
       <property name="bottomMargin">
        <number>20</number>
       </property>
+      <item row="0" column="0">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
       <item row="0" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
@@ -71,7 +93,7 @@ border-bottom: 1px solid rgba(255, 255, 255, 75);/*white*/
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="../../data.qrc">:/gui/pics/welcome.png</pixmap>
+           <pixmap>:/gui/pics/welcome.png</pixmap>
           </property>
           <property name="scaledContents">
            <bool>true</bool>
@@ -156,19 +178,6 @@ Before you login to system, you need to create your first user and set the syste
       </item>
       <item row="0" column="2">
        <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="0" column="0">
-       <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>

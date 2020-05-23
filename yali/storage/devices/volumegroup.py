@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 import os
 import math
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 import yali.context as ctx
 from yali.util import numeric_type
@@ -214,13 +216,13 @@ class VolumeGroup(DeviceMapper):
                 want all of the LVs activated, just the VG itself.
         """
         if not self.exists:
-            raise VolumeGroupError(_("device has not been created"), self.name)
+            raise VolumeGroupError(_("General", "device has not been created"), self.name)
 
         if self.status:
             return
 
         if not self.complete:
-            raise VolumeGroupError(_("cannot activate VG with missing PV(s)"), self.name)
+            raise VolumeGroupError(_("General", "cannot activate VG with missing PV(s)"), self.name)
 
         self.setupParents(orig=orig)
 
@@ -242,7 +244,7 @@ class VolumeGroup(DeviceMapper):
 
         w = None
         if intf:
-            w = intf.progressWindow(_("Creating device %s") % (self.path,))
+            w = intf.progressWindow(_("General", "Creating device %s") % (self.path,))
 
         try:
             self.createParents()

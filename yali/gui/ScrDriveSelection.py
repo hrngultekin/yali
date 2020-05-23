@@ -11,9 +11,11 @@
 #
 import sys
 import math
-import gettext
-
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 from PyQt5.QtWidgets import QWidget, QListWidgetItem
 from PyQt5.QtCore import pyqtSignal, QObject, QSize
@@ -95,7 +97,7 @@ class Widget(QWidget, ScreenWidget):
                 drive = DriveItem(self.ui.drives, disk, name)
                 item = DrivesListItem(self.ui.drives, drive)
                 item.setStatusTip(disk.name)
-                item.setToolTip(_("Device Path: %s") % (disk.name))
+                item.setToolTip(_("General", "Device Path: %s") % (disk.name))
                 self.ui.drives.setGridSize(QSize(drive.width(), drive.height()))
                 self.ui.drives.setItemWidget(item, drive)
 
@@ -111,8 +113,8 @@ class Widget(QWidget, ScreenWidget):
     def nextCheck(self):
 
         if len(self.selected_disks) == 0:
-            self.intf.messageWindow(_("Error"),
-                                    _("You must select at least one "
+            self.intf.messageWindow(_("General", "Error"),
+                                    _("General", "You must select at least one "
                                       "drive to be used for installation."), type="error")
             return False
         else:

@@ -13,10 +13,15 @@
 import os
 import dbus
 import pisi
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QListWidgetItem, QIcon, QObject, QEvent
+from PyQt5.QtWidgets import QWidget, QListWidgetItem
+from PyQt5.QtCore import pyqtSignal, QObject, QEvent
+from PyQt5.QtGui import QIcon
 
 import yali.util
 import yali.pisiiface
@@ -34,9 +39,9 @@ class Widget(QWidget, ScreenWidget):
         self.ui = Ui_RescuePisiWidget()
         self.ui.setupUi(self)
         self.steps = YaliSteps()
-        self.steps.setOperations([{"text":_("Starting D-Bus..."),"operation":yali.util.start_dbus},
-                                  {"text":_("Connecting to D-Bus..."),"operation":yali.postinstall.connectToDBus},
-                                  {"text":_("Fetching history..."),"operation":self.fillHistoryList}])
+        self.steps.setOperations([{"text":_("General", "Starting D-Bus..."),"operation":yali.util.start_dbus},
+                                  {"text":_("General", "Connecting to D-Bus..."),"operation":yali.postinstall.connectToDBus},
+                                  {"text":_("General", "Fetching history..."),"operation":self.fillHistoryList}])
 
         self.ui.buttonSelectConnection.clicked.connect(self.showConnections)
         self.connectionWidget = None
@@ -66,13 +71,13 @@ class Widget(QWidget, ScreenWidget):
 
     def shown(self):
         self.ui.buttonSelectConnection.setEnabled(False)
-        ctx.interface.informationWindow.update(_("Please Wait..."))
+        ctx.interface.informationWindow.update(_("General", "Please Wait..."))
         self.steps.slotRunOperations()
         ctx.interface.informationWindow.hide()
         if self.checkRegisteredConnections():
             self.ui.buttonSelectConnection.setEnabled(True)
         else:
-            self.ui.labelStatus.setText(_("No connection available"))
+            self.ui.labelStatus.setText(_("General", "No connection available"))
 
     def execute(self):
         ctx.takeBackOperation = self.ui.historyList.currentItem().getInfo()
@@ -113,7 +118,7 @@ class PisiEvent(QEvent):
 
 class HistoryItem(QListWidgetItem):
     def __init__(self, parent, info):
-        QListWidgetItem.__init__(self, _("Operation %(no)s : %(date)s - %(type)s") % {"no":info.no, "date":info.date, "type":info.type}, parent)
+        QListWidgetItem.__init__(self, _("General", "Operation %(no)s : %(date)s - %(type)s") % {"no":info.no, "date":info.date, "type":info.type}, parent)
         self._info = info
 
     def getInfo(self):
@@ -167,18 +172,18 @@ class ConnectionWidget(QWidget):
     def slotUseSelected(self):
         current = self.ui.connectionList.currentItem()
         if current:
-            ctx.interface.informationWindow.update(_("Connecting to network %s...") % current.getConnection())
+            ctx.interface.informationWindow.update(_("General", "Connecting to network %s...") % current.getConnection())
 
             try:
                 ret = current.connect()
             except:
                 ret = True
-                self.rootWidget.ui.labelStatus.setText(_("Connection failed"))
-                ctx.interface.informationWindow.update(_("Connection failed"))
+                self.rootWidget.ui.labelStatus.setText(_("General", "Connection failed"))
+                ctx.interface.informationWindow.update(_("General", "Connection failed"))
 
             if not ret:
-                self.rootWidget.ui.labelStatus.setText(_("Connected"))
-                ctx.interface.informationWindow.update(_("Connected"))
+                self.rootWidget.ui.labelStatus.setText(_("General", "Connected"))
+                ctx.interface.informationWindow.update(_("General", "Connected"))
 
             self.hide()
             ctx.mainScreen.processEvents()

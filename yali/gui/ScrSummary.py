@@ -10,10 +10,14 @@
 # Please read the COPYING file.
 #
 import time
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QTimer
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import pyqtSignal, QTimer
 
 import yali.util
 import yali.context as ctx
@@ -43,8 +47,8 @@ class Widget(QWidget, ScreenWidget):
             pass
 
     def slotReboot(self):
-        reply = QuestionDialog(_("Restart"),
-                               _('''<b><p>Are you sure you want to restart the computer?</p></b>'''))
+        reply = QuestionDialog(_("General", "Restart"),
+                               _("General", '''<b><p>Are you sure you want to restart the computer?</p></b>'''))
         if reply == "yes":
             yali.util.reboot()
 
@@ -56,7 +60,7 @@ class Widget(QWidget, ScreenWidget):
         self.timer.stop()
         ctx.interface.informationWindow.hide()
         if ctx.flags.install_type == ctx.STEP_BASE or ctx.flags.install_type == ctx.STEP_DEFAULT:
-            ctx.mainScreen.ui.buttonNext.setText(_("Next"))
+            ctx.mainScreen.ui.buttonNext.setText(_("General", "Next"))
 
         if (ctx.flags.install_type == ctx.STEP_BASE or ctx.flags.install_type == ctx.STEP_DEFAULT) \
            and not ctx.flags.collection:
@@ -65,7 +69,7 @@ class Widget(QWidget, ScreenWidget):
 
     def updateCounter(self):
         remain = 20 - (int(time.time()) - self.start_time)
-        ctx.interface.informationWindow.update(_("Installation starts in <b>%s</b> seconds") % remain)
+        ctx.interface.informationWindow.update(_("General", "Installation starts in <b>%s</b> seconds") % remain)
         if remain <= 0:
             self.timer.stop()
             ctx.mainScreen.slotNext()
@@ -73,9 +77,9 @@ class Widget(QWidget, ScreenWidget):
     def shown(self):
         #ctx.mainScreen.disableNext()
         if ctx.flags.install_type == ctx.STEP_BASE or ctx.flags.install_type == ctx.STEP_DEFAULT:
-            ctx.mainScreen.ui.buttonNext.setText(_("Start Installation"))
+            ctx.mainScreen.ui.buttonNext.setText(_("General", "Start Installation"))
         if ctx.flags.install_type == ctx.STEP_FIRST_BOOT:
-            ctx.mainScreen.ui.buttonNext.setText(_("Apply Settings"))
+            ctx.mainScreen.ui.buttonNext.setText(_("General", "Apply Settings"))
 
         if ctx.installData.isKahyaUsed:
             self.startBombCounter()
@@ -92,68 +96,68 @@ class Widget(QWidget, ScreenWidget):
 
         # Keyboard Layout
         if ctx.installData.keyData:
-            content.append(subject % _("Keyboard Settings"))
+            content.append(subject % _("General", "Keyboard Settings"))
             content.append(item %
-                           _("Selected keyboard layout is <b>%s</b>") %
+                           _("General", "Selected keyboard layout is <b>%s</b>") %
                            ctx.installData.keyData["name"])
             content.append(end)
 
         # TimeZone
         if ctx.installData.timezone:
-            content.append(subject % _("Date/Time Settings"))
+            content.append(subject % _("General", "Date/Time Settings"))
             content.append(item %
-                           _("Selected TimeZone is <b>%s</b>") %
+                           _("General", "Selected TimeZone is <b>%s</b>") %
                            ctx.installData.timezone)
             content.append(end)
 
         # Users
         if len(yali.users.PENDING_USERS) > 0:
-            content.append(subject % _("User Settings"))
+            content.append(subject % _("General", "User Settings"))
             for user in yali.users.PENDING_USERS:
-                state = _("User %(username)s (<b>%(realname)s</b>) added.")
+                state = _("General", "User %(username)s (<b>%(realname)s</b>) added.")
                 if "wheel" in user.groups:
-                    state = _("User %(username)s (<b>%(realname)s</b>) added with <u>administrator privileges</u>.")
+                    state = _("General", "User %(username)s (<b>%(realname)s</b>) added with <u>administrator privileges</u>.")
                 content.append(item % state % {"username":user.realname, "realname":user.username})
             content.append(end)
 
         # HostName
         if ctx.installData.hostName:
-            content.append(subject % _("Hostname Settings"))
+            content.append(subject % _("General", "Hostname Settings"))
             content.append(item %
-                           _("Hostname is set as <b>%s</b>") %
+                           _("General", "Hostname is set as <b>%s</b>") %
                            ctx.installData.hostName)
             content.append(end)
 
         # Partition
         if ctx.storage.clearPartType is not None:
-            content.append(subject % _("Partition Settings"))
+            content.append(subject % _("General", "Partition Settings"))
             devices = ""
             for disk in ctx.storage.clearPartDisks:
                 device = ctx.storage.devicetree.getDeviceByName(disk)
                 devices += "(%s on %s)" % (device.model, device.name)
 
             if ctx.storage.doAutoPart:
-                content.append(item % _("Automatic Partitioning selected."))
+                content.append(item % _("General", "Automatic Partitioning selected."))
                 if ctx.storage.clearPartType == CLEARPART_TYPE_ALL:
-                    content.append(item % _("Use All Space"))
-                    content.append(item % _("Removes all partitions on the selected "\
+                    content.append(item % _("General", "Use All Space"))
+                    content.append(item % _("General", "Removes all partitions on the selected "\
                                             "%s device(s). <b><u>This includes partitions "\
                                             "created by other operating systems.</u></b>") % devices)
                 elif ctx.storage.clearPartType == CLEARPART_TYPE_LINUX:
-                    content.append(item % _("Replace Existing Linux System(s)"))
-                    content.append(item % _("Removes all Linux partitions on the selected" \
+                    content.append(item % _("General", "Replace Existing Linux System(s)"))
+                    content.append(item % _("General", "Removes all Linux partitions on the selected" \
                                             "%s device(s). This does not remove "\
                                             "other partitions you may have on your " \
                                             "storage device(s) (such as VFAT or FAT32)") % devices)
                 elif ctx.storage.clearPartType == CLEARPART_TYPE_NONE:
-                    content.append(item % _("Use Free Space"))
-                    content.append(item % _("Retains your current data and partitions" \
+                    content.append(item % _("General", "Use Free Space"))
+                    content.append(item % _("General", "Retains your current data and partitions" \
                                             " and uses only the unpartitioned space on " \
                                             "the selected %s device(s), assuming you have "\
                                             "enough free space available.") % devices)
 
             else:
-                content.append(item % _("Manual Partitioning selected."))
+                content.append(item % _("General", "Manual Partitioning selected."))
                 for operation in ctx.storage.devicetree.operations:
                     content.append(item % operation)
 
@@ -161,18 +165,18 @@ class Widget(QWidget, ScreenWidget):
 
         # Bootloader
         if ctx.bootloader.stage1Device:
-            content.append(subject % _("Bootloader Settings"))
-            grubstr = _("GRUB will be installed to <b>%s</b>.")
+            content.append(subject % _("General", "Bootloader Settings"))
+            grubstr = _("General", "GRUB will be installed to <b>%s</b>.")
             if ctx.bootloader.bootType == BOOT_TYPE_NONE:
-                content.append(item % _("GRUB will not be installed."))
+                content.append(item % _("General", "GRUB will not be installed."))
             else:
                 content.append(item % grubstr % ctx.bootloader.stage1Device)
 
             content.append(end)
 
         if ctx.flags.collection and ctx.installData.autoCollection:
-            content.append(subject % _("Package Installation Settings"))
-            content.append(item % _("Collection <b>%s</b> selected") %
+            content.append(subject % _("General", "Package Installation Settings"))
+            content.append(item % _("General", "Collection <b>%s</b> selected") %
                            ctx.installData.autoCollection.title)
 
             content.append(end)
@@ -192,13 +196,13 @@ class Widget(QWidget, ScreenWidget):
         if ctx.flags.install_type == ctx.STEP_BASE or ctx.flags.install_type == ctx.STEP_DEFAULT:
             self.createPackageList()
 
-            rc = ctx.interface.messageWindow(_("Confirm"),
-                                        _("The partitioning options you have selected "
+            rc = ctx.interface.messageWindow(_("General", "Confirm"),
+                                        _("General", "The partitioning options you have selected "
                                           "will now be written to disk. Any "
                                           "data on deleted or reformatted partitions "
                                           "will be lost."),
                                           type = "custom", customIcon="question",
-                                          customButtons=[_("Write Changes to Disk"), _("Go Back")],
+                                          customButtons=[_("General", "Write Changes to Disk"), _("General", "Go Back")],
                                           default=1)
 
             ctx.mainScreen.processEvents()
@@ -208,14 +212,14 @@ class Widget(QWidget, ScreenWidget):
                     ctx.storage.turnOnSwap()
                     ctx.storage.mountFilesystems(readOnly=False, skipRoot=False)
                     ctx.mainScreen.step_increment = 1
-                    ctx.mainScreen.ui.buttonNext.setText(_("Next"))
+                    ctx.mainScreen.ui.buttonNext.setText(_("General", "Next"))
                     return True
 
             ctx.mainScreen.enableBack()
             return False
 
         elif ctx.flags.install_type == ctx.STEP_FIRST_BOOT:
-            ctx.mainScreen.ui.buttonNext.setText(_("Next"))
+            ctx.mainScreen.ui.buttonNext.setText(_("General", "Next"))
             return True
 
 
@@ -284,8 +288,8 @@ class Widget(QWidget, ScreenWidget):
         # if alternatives are available ask to user, otherwise return
         if neededDriverPackages and neededDriverPackages.issubset(allPackages):
             answer = ctx.interface.messageWindow(
-                    _("Proprietary Hardware Drivers"),
-                    _("<qt>Proprietary drivers are available which may be required "
+                    _("General", "Proprietary Hardware Drivers"),
+                    _("General", "<qt>Proprietary drivers are available which may be required "
                       "to utilize the full capabilities of your video card. "
                       "These drivers are developed by the hardware manufacturer "
                       "and not supported by Pisi Linux developers since their "
@@ -294,7 +298,7 @@ class Widget(QWidget, ScreenWidget):
                       "<b>Do you want to install and use these proprietary drivers "
                       "instead of the default drivers?</b></qt>"),
                       type="custom", customIcon="question",
-                      customButtons=[_("Yes"), _("No")])
+                      customButtons=[_("General", "Yes"), _("General", "No")])
 
             if answer == 0:
                 packages.update(neededDriverPackages)

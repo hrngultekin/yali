@@ -4,10 +4,12 @@ import os
 import sys
 import time
 import errno
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 import yali.util
 import yali.context as ctx
@@ -169,7 +171,7 @@ class CryptTab(object):
                                                 entry['device'].format.uuid,
                                                 entry['keyfile'],
                                                 entry['options'])
-        return crypttab                       
+        return crypttab
 
     def __getitem__(self, key):
         return self.mappings[key]
@@ -295,8 +297,8 @@ class StorageSet(object):
 
                 if ctx.interface.messageWindow:
                     if msg.errno == errno.EEXIST:
-                        ctx.interface.messageWindow(_("Invalid mount point"),
-                                                    _("An error occurred when trying "
+                        ctx.interface.messageWindow(_("General", "Invalid mount point"),
+                                                    _("General", "An error occurred when trying "
                                                       "to create %s.  Some element of "
                                                       "this path is not a directory. "
                                                       "This is a fatal error and the "
@@ -308,8 +310,8 @@ class StorageSet(object):
                     else:
                         na = {'mountpoint': device.format.mountpoint,
                               'msg': msg.strerror}
-                        ctx.interface.messageWindow(_("Invalid mount point"),
-                                                    _("An error occurred when trying "
+                        ctx.interface.messageWindow(_("General", "Invalid mount point"),
+                                                    _("General", "An error occurred when trying "
                                                       "to create %(mountpoint)s: "
                                                       "%(msg)s.  This is "
                                                       "a fatal error and the install "
@@ -326,14 +328,14 @@ class StorageSet(object):
                 if ctx.interface.messageWindow and not device.format.linuxNative:
                     na = {'path': device.path,
                           'mountpoint': device.format.mountpoint}
-                    ret = ctx.interface.messageWindow(_("Unable to mount filesystem"),
-                                                 _("An error occurred mounting "
+                    ret = ctx.interface.messageWindow(_("General", "Unable to mount filesystem"),
+                                                 _("General", "An error occurred mounting "
                                                    "device %(path)s as "
                                                    "%(mountpoint)s.  You may "
                                                    "continue installation, but "
                                                    "there may be problems.") % na,
                                                    type="custom", customIcon="warning",
-                                                   customButtons=[_("Exit installer"), _("Continue")])
+                                                   customButtons=[_("General", "Exit installer"), _("General", "Continue")])
 
                     if ret == 0:
                         sys.exit(2)
@@ -347,8 +349,8 @@ class StorageSet(object):
                     na = {'path': device.path,
                           'mountpoint': device.format.mountpoint,
                           'msg': msg}
-                    ctx.interface.messageWindow(_("Unable to mount filesystem"),
-                                                _("An error occurred mounting "
+                    ctx.interface.messageWindow(_("General", "Unable to mount filesystem"),
+                                                _("General", "An error occurred mounting "
                                                   "device %(path)s as %(mountpoint)s: "
                                                   "%(msg)s. This is "
                                                   "a fatal error and the install "
@@ -380,12 +382,12 @@ class StorageSet(object):
             if not ctx.interface.messageWindow:
                 sys.exit(2)
 
-            ret = ctx.interface.messageWindow(_("Error"),
+            ret = ctx.interface.messageWindow(_("General", "Error"),
                                               msg,
                                               type="custom",
-                                              customButtons=[_("Skip"),
-                                                             _("Format"),
-                                                             _("Exit")],
+                                              customButtons=[_("General", "Skip"),
+                                                             _("General", "Format"),
+                                                             _("General", "Exit")],
                                               customIcon="error")
 
             if ret == 0:
@@ -415,7 +417,7 @@ class StorageSet(object):
                     device.setup()
                     device.format.setup()
                 except swap.OldSwapError:
-                    msg = _("The swap device:\n\n     %s\n\n"
+                    msg = _("General", "The swap device:\n\n     %s\n\n"
                             "is an old-style Linux swap partition.  If "
                             "you want to use this device for swap space, "
                             "you must reformat as a new-style Linux swap "
@@ -426,7 +428,7 @@ class StorageSet(object):
                         continue
 
                 except swap.SuspendError:
-                    msg = _("The swap device:\n\n     %s\n\n"
+                    msg = _("General", "The swap device:\n\n     %s\n\n"
                                 "in your /etc/fstab file is currently in "
                                 "use as a software suspend device, "
                                 "which means your system is hibernating. "
@@ -439,7 +441,7 @@ class StorageSet(object):
                         continue
 
                 except swap.UnknownSwapError:
-                    msg = _("The swap device:\n\n     %s\n\n"
+                    msg = _("General", "The swap device:\n\n     %s\n\n"
                             "does not contain a supported swap volume.  In "
                             "order to continue installation, you will need "
                             "to format the device or skip it.") \
@@ -450,13 +452,13 @@ class StorageSet(object):
 
                 except DeviceError as (msg, name):
                     if ctx.interface.messageWindow:
-                        error = _("Error enabling swap device %(name)s: "
+                        error = _("General", "Error enabling swap device %(name)s: "
                                   "%(msg)s<br><br>"
                                   "This most likely means this swap "
                                   "device has not been initialized.<br><br>"
                                   "Press OK to exit the installer.") % \
                                 {'name': name, 'msg': msg}
-                        ctx.interface.messageWindow(_("Error"),
+                        ctx.interface.messageWindow(_("General", "Error"),
                                                     error,
                                                     type="error")
                     sys.exit(2)
@@ -498,22 +500,22 @@ class StorageSet(object):
         errors = []
 
         if not request:
-            return [_("You have not created a bootable partition.")]
+            return [_("General", "You have not created a bootable partition.")]
 
         # can't have bootable partition on LV
         if request.type == "lvmlv":
-            errors.append(_("Bootable partitions cannot be on a logical volume."))
+            errors.append(_("General", "Bootable partitions cannot be on a logical volume."))
 
         # can't have bootable partition on Raid Array
         if request.type == "mdarray":
-            errors.append(_("Bootable partitions cannot be on a raid array."))
+            errors.append(_("General", "Bootable partitions cannot be on a raid array."))
 
         # Make sure /boot is on a supported FS type.  This prevents crazy
         # things like boot on vfat.
         if not request.format.bootable or \
            (getattr(request.format, "mountpoint", None) == "/boot" and
             request.format.type not in self.bootFilesystemTypes):
-            errors.append(_("Bootable partitions cannot be on an %s filesystem.") % request.format.type)
+            errors.append(_("General", "Bootable partitions cannot be on an %s filesystem.") % request.format.type)
 
         return errors
 
@@ -522,7 +524,25 @@ class StorageSet(object):
         def mountDict():
             """Return a dictionary mapping mount points to devices."""
             ret = {}
-            for device in [d for d in self.devices if d.format.mountable]:
+            #for d in self.devices:
+                #print(d.format)
+
+            for device in [d for d in self.devices if d.format.mountable or d.format.type == "efi"]:
+                # FIXME: _mountpoints değişkeni için geçici gözüm
+                with open("/proc/mounts") as _file:
+                    lines = _file.readlines()
+
+                for l in lines:
+                    if l.startswith(device.path):
+                        # print(device.path, l.split(" ")[1])
+                        #ret[l.split(" ")[1]] = device
+                        ret[l.split(" ")[1]] = device
+
+                    # WARNING: mountpoint None dönüyor
+                #print(device.format.mountpoint)
+                if device.format.type == "efi":
+                    ret["efi"] = device
+
                 if device.format.mountpoint:
                     ret[device.format.mountpoint] = device
 
@@ -530,7 +550,8 @@ class StorageSet(object):
 
         _mountpoints = mountDict()
         if yali.util.isEfi():
-            return _mountpoints.get("/boot/efi")
+            # print("mountpoints.get -> ", _mountpoints)
+            return _mountpoints.get("/boot/efi", _mountpoints.get("efi"))
         else:
             return _mountpoints.get("/boot", _mountpoints.get("/"))
 
@@ -617,7 +638,7 @@ class StorageSet(object):
     def _parseFSTabEntry(self, entry):
         if "noauto" in entry.get_fs_mntopts():
             ctx.logger.error("ignoring noauto entry")
-            raise FSTabEntryError(_("Ignoring noauto entry"))
+            raise FSTabEntryError(_("General", "Ignoring noauto entry"))
 
         devspec =  entry.get_fs_spec()
         mountpoint = entry.get_fs_file()
@@ -675,20 +696,20 @@ class StorageSet(object):
 
         if device is None:
             ctx.logger.error("failed to resolve %s (%s) from fstab" % (devspec, fstype))
-            raise FSTabEntryError(_("Failed to resolve %s (%s) from fstab") % (devspec, fstype))
+            raise FSTabEntryError(_("General", "Failed to resolve %s (%s) from fstab") % (devspec, fstype))
 
         fmt = getFormat(fstype, device=device.path)
         if fstype != "auto" and None in (device.format.type, fmt.type):
             ctx.logger.info("Unrecognized filesystem type for %s (%s)"
                      % (device.name, fstype))
-            raise FSTabEntryError(_("Unrecognized filesystem type for %s (%s)") % (device.name, fstype))
+            raise FSTabEntryError(_("General", "Unrecognized filesystem type for %s (%s)") % (device.name, fstype))
 
         # make sure, if we're using a device from the tree, that
         # the device's format we found matches what's in the fstab
         ftype = getattr(fmt, "mountType", fmt.type)
         dtype = getattr(device.format, "mountType", device.format.type)
         if fstype != "auto" and ftype != dtype:
-            raise StorageSetError(_("Scanned format (%s) differs from fstab format (%s)") % (dtype, ftype))
+            raise StorageSetError(_("General", "Scanned format (%s) differs from fstab format (%s)") % (dtype, ftype))
         del ftype
         del dtype
 
@@ -710,7 +731,7 @@ class StorageSet(object):
         path = "%s/etc/fstab" % chroot
         if not os.access(path, os.R_OK):
             ctx.logger.info("cannot open %s for read" % path)
-            raise FSTabError(_("Cannot open %s for read") % path)
+            raise FSTabError(_("General", "Cannot open %s for read") % path)
         blkidTab = BlkidTab(chroot=chroot)
         try:
             blkidTab.parse()
@@ -740,7 +761,7 @@ class StorageSet(object):
                 self.preserveLines.append(entry)
                 continue
             except Exception as e:
-                raise FSTabError(_("Fstab entry %s is malformed: %s") % (entry.get_fs_spec(), e))
+                raise FSTabError(_("General", "Fstab entry %s is malformed: %s") % (entry.get_fs_spec(), e))
             else:
                 if not device:
                     continue

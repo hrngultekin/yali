@@ -13,10 +13,15 @@ import os
 from multiprocessing import Process, Queue
 from Queue import Empty
 
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QWidget, pyqtSignal, QPixmap, QObject, QTimer, QMutex, QWaitCondition
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import pyqtSignal, QObject, QTimer, QMutex, QWaitCondition
+from PyQt5.QtGui import QPixmap
 
 import pisi.ui
 
@@ -97,7 +102,7 @@ class Widget(QWidget, ScreenWidget):
         self.poll_timer = QTimer(self)
         self.poll_timer.timeout.connect(self.checkQueueEvent)
 
-        if ctx.consts.lang == "tr":
+        if ctx.lang == "tr":
             self.installProgress.ui.progress.setFormat("%%p")
 
         self.iter_slideshows = iter_slideshows()
@@ -158,7 +163,7 @@ class Widget(QWidget, ScreenWidget):
             # EventInstall
             if event == EventInstall:
                 package = data[1]
-                self.installProgress.ui.info.setText(_("Installing <b>%(name)s</b> -- %(summary)s") % {"name":package.name,
+                self.installProgress.ui.info.setText(_("General", "Installing <b>%(name)s</b> -- %(summary)s") % {"name":package.name,
                                                                                        "summary":package.summary})
                 ctx.logger.debug("Pisi: %s installing" % package.name)
                 self.cur += 1
@@ -167,7 +172,7 @@ class Widget(QWidget, ScreenWidget):
             # EventConfigure
             elif event == EventConfigure:
                 package = data[1]
-                self.installProgress.ui.info.setText(_("Configuring <b>%s</b>") % package.name)
+                self.installProgress.ui.info.setText(_("General", "Configuring <b>%s</b>") % package.name)
                 ctx.logger.debug("Pisi: %s configuring" % package.name)
                 self.cur += 1
                 self.installProgress.ui.progress.setValue(self.cur)
@@ -192,14 +197,14 @@ class Widget(QWidget, ScreenWidget):
                 package = os.path.basename(data[1])
                 self.timer.stop()
                 self.poll_timer.stop()
-                rc = ctx.interface.messageWindow(_("Warning"),
-                                                 _("Following error occured while "
+                rc = ctx.interface.messageWindow(_("General", "Warning"),
+                                                 _("General", "Following error occured while "
                                                    "installing packages:"
                                                    "<b>%s</b><br><br>"
                                                    "Do you want to retry?")
                                                  % package,
                                                  type="custom", customIcon="warning",
-                                                 customButtons=[_("Yes"), _("No")])
+                                                 customButtons=[_("General", "Yes"), _("General", "No")])
                 self.retry_answer = not rc
 
                 self.timer.start(1000 * 30)
@@ -213,8 +218,8 @@ class Widget(QWidget, ScreenWidget):
     def changeSlideshows(self):
         slide = self.iter_slideshows.next()
         self.ui.slideImage.setPixmap(slide["picture"])
-        if slide["description"].has_key(ctx.consts.lang):
-            description = slide["description"][ctx.consts.lang]
+        if slide["description"].has_key(ctx.lang):
+            description = slide["description"][ctx.lang]
         else:
             description = slide["description"]["en"]
         self.ui.slideText.setText(description)
@@ -258,7 +263,7 @@ class Widget(QWidget, ScreenWidget):
 
     def installError(self, error):
         self.has_errors = True
-        errorstr = _("""An error occured during the installation of packages.
+        errorstr = _("General", """An error occured during the installation of packages.
 This may be caused by a corrupted installation medium error:
 %s
 """) % str(error)

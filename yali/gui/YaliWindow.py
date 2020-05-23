@@ -12,28 +12,18 @@
 import os
 import sys
 import codecs
-import gettext
 
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
-from PyQt5.Qt import QResource
-from PyQt5.Qt import QWidget
-from PyQt5.Qt import QAction
-from PyQt5.Qt import pyqtSignal
-from PyQt5.Qt import QTextBrowser
-from PyQt5.Qt import QObject
-from PyQt5.Qt import QPixmap
-from PyQt5.Qt import QCursor
-from PyQt5.Qt import QPixmap
-from PyQt5.Qt import Qt
-from PyQt5.Qt import QCursor
-from PyQt5.Qt import QKeySequence
-from PyQt5.Qt import QTimer
-from PyQt5.Qt import QGraphicsOpacityEffect
-from PyQt5.Qt import QIcon
-from PyQt5.Qt import QMenu
-from PyQt5.Qt import QSize
-from PyQt5.Qt import QShortcut
+from PyQt5.QtCore import (QResource, pyqtSignal, QObject, Qt, QTimer, QSize)
+
+from PyQt5.QtWidgets import (QWidget, QAction, QTextBrowser, QGraphicsOpacityEffect, QMenu, QShortcut)
+
+from PyQt5.QtGui import (QPixmap, QCursor, QPixmap, QKeySequence, QIcon)
 
 from QTermWidget import QTermWidget
 from pyaspects.weaver import weave_object_method
@@ -80,16 +70,18 @@ class HelpWidget(PAbstractBox):
 ##
 # Widget for YaliWindow (you can call it MainWindow too ;).
 class Widget(QWidget):
-    signalProcessEvents=pyqtSignal()
+    signalProcessEvents = pyqtSignal()
+    currentLanguageChanged = pyqtSignal()
+    
     def __init__(self):
-        QWidget.__init__(self, None)
+        super(Widget, self).__init__(None)
         # Set pixmaps resource before Main Window initialized
         self._resource = os.path.join(ctx.consts.theme_dir, ctx.flags.theme, ctx.consts.pixmaps_resource_file)
         if os.path.exists(self._resource):
             resource = QResource()
             resource.registerResource(self._resource)
         else:
-            raise yali.Error, _("Pixmaps resources file doesn't exists")
+            raise yali.Error, _("General", "Pixmaps resources file doesn't exists")
 
         self.ui = Ui_YaliMain()
         self.ui.setupUi(self)
@@ -122,14 +114,14 @@ class Widget(QWidget):
         if os.path.exists(self._style):
             self.updateStyle()
         else:
-            raise yali.Error, _("Style file doesn't exists")
+            raise yali.Error, _("General", "Style file doesn't exists")
 
         # set screens content
         release_file = os.path.join(ctx.consts.branding_dir, ctx.flags.branding, ctx.consts.release_file)
         if os.path.exists(release_file):
             self.screens_content = yali.util.parse_branding_screens(release_file)
         else:
-            raise yali.Error, _("Release file doesn't exists")
+            raise yali.Error, _("General", "Release file doesn't exists")
 
 
         # move one step at a time
@@ -137,9 +129,9 @@ class Widget(QWidget):
 
         # ToolButton Popup Menu
         self.menu = QMenu()
-        self.shutdown = self.menu.addAction(QIcon(QPixmap(":/images/system-shutdown.png")), _("Turn Off Computer"))
-        self.reboot = self.menu.addAction(QIcon(QPixmap(":/images/system-reboot.png")), _("Restart Computer"))
-        self.restart = self.menu.addAction(QIcon(QPixmap(":/images/system-yali-reboot.png")), _("Restart YALI"))
+        self.shutdown = self.menu.addAction(QIcon(QPixmap(":/images/system-shutdown.png")), _("General", "Turn Off Computer"))
+        self.reboot = self.menu.addAction(QIcon(QPixmap(":/images/system-reboot.png")), _("General", "Restart Computer"))
+        self.restart = self.menu.addAction(QIcon(QPixmap(":/images/system-yali-reboot.png")), _("General", "Restart YALI"))
         #self.menu.setDefaultAction(self.shutdown)
         self.ui.system_menu.setMenu(self.menu)
         self.ui.system_menu.setDefaultAction(self.shutdown)
@@ -160,7 +152,7 @@ class Widget(QWidget):
             self.ui.releaseNotes.hide()
         self.menu.triggered[QAction].connect(self.slotMenu)
 
-        self.cmb = _("right")
+        self.cmb = _("General", "right")
         self.dont_ask_again = False
         self.terminal = None
         self.tetris = None
@@ -176,13 +168,13 @@ class Widget(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton and not self.dont_ask_again:
-            if self.cmb == _("left"):
-                ocmb = _("right")
+            if self.cmb == _("General", "left"):
+                ocmb = _("General", "right")
             else:
-                ocmb = _("left")
-            reply = QuestionDialog(_("Mouse Settings"),
-                                   _("You just clicked the <b>%s</b> mouse button.") % self.cmb,
-                                   _("Do you want to switch to the <b>%s</b> handed configuration?") % ocmb,
+                ocmb = _("General", "left")
+            reply = QuestionDialog(_("General", "Mouse Settings"),
+                                   _("General", "You just clicked the <b>%s</b> mouse button.") % self.cmb,
+                                   _("General", "Do you want to switch to the <b>%s</b> handed configuration?") % ocmb,
                                    dontAsk = True)
             if reply == "yes":
                 yali.sysutils.setMouse(self.cmb)
@@ -211,18 +203,18 @@ class Widget(QWidget):
 
     def slotMenu(self, action):
         if action == self.shutdown:
-            reply = QuestionDialog(_("Warning"),
-                                   _("Are you sure you want to shut down your computer now?"))
+            reply = QuestionDialog(_("General", "Warning"),
+                                   _("General", "Are you sure you want to shut down your computer now?"))
             if reply == "yes":
                 yali.util.shutdown()
         elif action == self.reboot:
-            reply = QuestionDialog(_("Warning"),
-                                   _("Are you sure you want to restart your computer now?"))
+            reply = QuestionDialog(_("General", "Warning"),
+                                   _("General", "Are you sure you want to restart your computer now?"))
             if reply == "yes":
                 yali.util.reboot()
         else:
-            reply = QuestionDialog(_("Warning"),
-                                   _("Are you sure you want to restart the YALI installer now?"))
+            reply = QuestionDialog(_("General", "Warning"),
+                                   _("General", "Are you sure you want to restart the YALI installer now?"))
             if reply == "yes":
                 os.execv("/usr/bin/yali-bin", sys.argv)
 
@@ -243,12 +235,12 @@ class Widget(QWidget):
             terminal.setScrollBarPosition(QTermWidget.ScrollBarRight)
             terminal.setColorScheme(1)
             terminal.sendText("export TERM='xterm'\nclear\n")
-            self.terminal = Dialog(_("Terminal"), terminal, True, QKeySequence(Qt.Key_F11))
+            self.terminal = Dialog(_("General", "Terminal"), terminal, True, QKeySequence(Qt.Key_F11))
             self.terminal.resize(700, 500)
         self.terminal.exec_()
 
     def toggleTetris(self):
-        self.tetris = Dialog(_("Tetris"), None, True, QKeySequence(Qt.Key_F6))
+        self.tetris = Dialog(_("General", "Tetris"), None, True, QKeySequence(Qt.Key_F6))
         _tetris = Tetris(self.tetris)
         self.tetris.addWidget(_tetris)
         self.tetris.resize(240, 500)
@@ -331,13 +323,13 @@ class Widget(QWidget):
 
             widget_icon = self.screens_content[widget_id][0]
 
-            if self.screens_content[widget_id][1].has_key(ctx.consts.lang):
-                widget_title = self.screens_content[widget_id][1][ctx.consts.lang]
+            if self.screens_content[widget_id][1].has_key(ctx.lang):
+                widget_title = self.screens_content[widget_id][1][ctx.lang]
             else:
                 widget_title = self.screens_content[widget_id][1]["en"]
 
-            if self.screens_content[widget_id][2].has_key(ctx.consts.lang):
-                widget_help = self.screens_content[widget_id][2][ctx.consts.lang]
+            if self.screens_content[widget_id][2].has_key(ctx.lang):
+                widget_help = self.screens_content[widget_id][2][ctx.lang]
             else:
                 widget_help = self.screens_content[widget_id][2]["en"]
 
@@ -380,11 +372,11 @@ class Widget(QWidget):
             try:
                 self.ui.mainStack.addWidget(screen())
             except Exception, msg:
-                rc = ctx.interface.messageWindow(_("Error"),
-                                                 _("An error occurred when attempting "
+                rc = ctx.interface.messageWindow(_("General", "Error"),
+                                                 _("General", "An error occurred when attempting "
                                                     "to load screens:%s") % msg,
                                                  type="custom", customIcon="error",
-                                                 customButtons=[_("Exit")])
+                                                 customButtons=[_("General", "Exit")])
                 if not rc:
                     sys.exit(0)
 
@@ -416,9 +408,16 @@ class Widget(QWidget):
 
     def showReleaseNotes(self):
         # make a release notes dialog
-        dialog = Dialog(_('Release Notes'), ReleaseNotes(self), self)
+        dialog = Dialog(_("General", 'Release Notes'), ReleaseNotes(self), self)
         dialog.resize(500, 400)
         dialog.exec_()
+        
+    def retranslateUi(self):
+        self.shutdown.setText(_("General", "Turn Off Computer"))
+        self.reboot.setText(_("General", "Restart Computer"))
+        self.restart.setText(_("General", "Restart YALI"))
+        
+        self.currentLanguageChanged.emit()
 
 class ReleaseNotes(QTextBrowser):
 
@@ -430,13 +429,14 @@ class ReleaseNotes(QTextBrowser):
         try:
             self.setText(codecs.open(self.loadFile(), "r", "UTF-8").read())
         except Exception, msg:
-            ctx.logger.error(_(msg))
+            ctx.logger.error(_("General", "An error occurred when showing "
+                                                    "to release nostes:%s") % (msg))
 
     def loadFile(self):
-        releasenotes_path = os.path.join(ctx.consts.source_dir,"release-notes/releasenotes-%s.html" % ctx.consts.lang)
+        releasenotes_path = os.path.join(ctx.consts.source_dir,"release-notes/releasenotes-%s.html" % ctx.lang)
 
         if not os.path.exists(releasenotes_path):
             releasenotes_path = os.path.join(ctx.consts.source_dir, "release-notes", "releasenotes-en.html")
         if os.path.exists(releasenotes_path):
             return releasenotes_path
-        raise Exception, _("Release notes could not be loaded.")
+        raise Exception, _("General", "Release notes could not be loaded.")

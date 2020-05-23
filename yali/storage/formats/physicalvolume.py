@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import os
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 from parted import PARTITION_LVM
-
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
 
 from yali.storage.library import lvm
 from yali.storage.formats import Format, FormatError, register_device_format
@@ -16,7 +17,7 @@ class PhysicalVolumeError(FormatError):
 class PhysicalVolume(Format):
     """ An LVM physical volume. """
     _type = "lvmpv"
-    _name = _("physical volume (LVM)")
+    _name = _("General", "physical volume (LVM)")
     _udevTypes = ["LVM2_member"]
     partedFlag = PARTITION_LVM
     _formattable = True                 # can be formatted

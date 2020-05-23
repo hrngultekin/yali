@@ -3,10 +3,12 @@
 import os
 import glob
 import parted
-import gettext
 
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 import yali.util
 import yali.context as ctx
@@ -207,11 +209,11 @@ class BootLoader(object):
             return _choices
 
         if self.stage2Device.type == "mdarray":
-            _choices[BOOT_TYPE_RAID] = (self.stage2Device.name, _("%s" % boot_type_strings[BOOT_TYPE_RAID]))
-            _choices[BOOT_TYPE_MBR] = (self.drives[0], _("%s" % boot_type_strings[BOOT_TYPE_MBR]))
+            _choices[BOOT_TYPE_RAID] = (self.stage2Device.name, _("General", "%s" % boot_type_strings[BOOT_TYPE_RAID]))
+            _choices[BOOT_TYPE_MBR] = (self.drives[0], _("General", "%s" % boot_type_strings[BOOT_TYPE_MBR]))
         else:
-            _choices[BOOT_TYPE_PARTITION] = (self.stage2Device.name, _("%s" % boot_type_strings[BOOT_TYPE_PARTITION]))
-            _choices[BOOT_TYPE_MBR] = (self.drives[0], _("%s" % boot_type_strings[BOOT_TYPE_MBR]))
+            _choices[BOOT_TYPE_PARTITION] = (self.stage2Device.name, _("General", "%s" % boot_type_strings[BOOT_TYPE_PARTITION]))
+            _choices[BOOT_TYPE_MBR] = (self.drives[0], _("General", "%s" % boot_type_strings[BOOT_TYPE_MBR]))
 
         return _choices
 
@@ -299,11 +301,11 @@ class BootLoader(object):
                     ctx.logger.debug("Windows boot on %s" % windowsBoot)
 
                     if bootDevice.name == self.storage.devicetree.getDeviceByPath(device).parents[0]:
-                        s = windows_conf % {"title": _("Windows"),
+                        s = windows_conf % {"title": _("General", "Windows"),
                                             "device": device,
                                             "root": windowsBoot}
                     else:
-                        s = windows_conf_multiple_disks % {"title": _("Windows"),
+                        s = windows_conf_multiple_disks % {"title": _("General", "Windows"),
                                                            "device": device,
                                                            "root": windowsBoot}
                     grubConfFile.write(s)
@@ -371,4 +373,12 @@ quit
 
     def install2(self):
         stage1Devices = get_physical_devices(self.storage, self.storage.devicetree.getDeviceByName(self.stage1Device))
-        yali.util.chroot("grub2-install --recheck %s" % stage1Devices[0].path)
+
+        if yali.util.isEfi():
+            efiDev = self.storage.storageset.bootDevice
+            yali.util.chroot("mkdir /boot/efi")
+            yali.util.chroot("mount %s /boot/efi" % efiDev.path)
+            yali.util.chroot("grub2-install --recheck --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=pisilinux %s" % stage1Devices[0].path)
+            yali.util.chroot("umount /boot/efi")
+        else:
+            yali.util.chroot("grub2-install --recheck %s" % stage1Devices[0].path)

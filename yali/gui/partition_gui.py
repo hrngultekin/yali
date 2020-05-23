@@ -3,9 +3,11 @@
 import os
 import copy
 import parted
-import gettext
-__trans = gettext.translation('yali', fallback=True)
-_ = __trans.ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 
 from PyQt5 import QtWidgets
@@ -31,13 +33,13 @@ class PartitionEditor:
         self.partedPartition = partedPartition
 
         if isNew:
-            title = _("Create Partition on %(path)s (%(model)s)") %  {"path":os.path.basename(partedPartition.disk.device.path),
+            title = _("General", "Create Partition on %(path)s (%(model)s)") %  {"path":os.path.basename(partedPartition.disk.device.path),
                                                                       "model":partedPartition.disk.device.model}
         else:
             try:
-                title = _("Edit Partition %s") % origrequest.path
+                title = _("General", "Edit Partition %s") % origrequest.path
             except:
-                title = _("Edit Partition")
+                title = _("General", "Edit Partition")
 
         self.dialog = Dialog(title, closeButton=False)
         self.dialog.addWidget(PartitionWidget(self, origrequest, isNew, restricts))
@@ -62,7 +64,7 @@ class PartitionEditor:
             if active and mountpoint:
                 msg = sanityCheckMountPoint(mountpoint)
                 if msg:
-                    ctx.interface.messageWindow(_("Mount Point Error"), msg,
+                    ctx.interface.messageWindow(_("General", "Mount Point Error"), msg,
                                                 type="warning")
                     continue
 
@@ -76,8 +78,8 @@ class PartitionEditor:
                         break
 
                 if used:
-                    ctx.interface.messageWindow(_("Mount point in use"),
-                                                _("The mount point \"%s\" is in "
+                    ctx.interface.messageWindow(_("General", "Mount point in use"),
+                                                _("General", "The mount point \"%s\" is in "
                                                   "use. Please pick another.") %
                                                 (mountpoint,),
                                                 type="warning")
@@ -100,7 +102,7 @@ class PartitionEditor:
 
                 err = doUIRAIDLVMChecks(format, [disk.name], self.storage)
                 if err:
-                    self.intf.messageWindow(_("Error With Request"),
+                    self.intf.messageWindow(_("General", "Error With Request"),
                                             err, type="error")
                     continue
 

@@ -9,23 +9,29 @@
 #
 # Please read the COPYING file.
 #
-import gettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 import pardus.xorg
-_ = gettext.translation('yali', fallback=True).ugettext
 
-from PyQt5.Qt import QWidget, pyqtSignal, QIcon, QTimeLine, QPixmap, QLineEdit, QListWidgetItem#, QFocusEvent 
+
+from PyQt5.QtWidgets import (QWidget, QLineEdit, QListWidgetItem)#, QFocusEvent 
+from PyQt5.QtCore import (pyqtSignal, QTimeLine)
+from PyQt5.QtGui import (QIcon, QPixmap)
+
 
 import yali.users
 import yali.postinstall
 import yali.context as ctx
 from yali.gui import ScreenWidget
 from yali.gui.Ui.setupuserswidget import Ui_SetupUsersWidget
-
 class Widget(QWidget, ScreenWidget):
     name = "accounts"
 
     def __init__(self):
-        QWidget.__init__(self)
+        super(Widget, self).__init__()
         self.ui = Ui_SetupUsersWidget()
         self.ui.setupUi(self)
 
@@ -111,7 +117,7 @@ class Widget(QWidget, ScreenWidget):
     def execute(self):
         if self.checkUsers():
             ctx.installData.autoLoginUser = str(self.ui.autoLogin.currentText())
-            if self.ui.createButton.text() == _("Update"):
+            if self.ui.createButton.text() == _("General", "Update"):
                 return self.slotCreateUser()
             return True
 
@@ -198,13 +204,13 @@ class Widget(QWidget, ScreenWidget):
 
         if not password == '' and (password.lower() == username.lower() or
                                    password.lower() == realname.lower()):
-            self.showError(_('Don\'t use your user name or name as a password'))
+            self.showError(_("General", 'Don\'t use your user name or name as a password'))
             return
         elif password_confirm != password and password_confirm:
-            self.showError(_('Passwords do not match'))
+            self.showError(_("General", 'Passwords do not match'))
             return
         elif len(password) == len(password_confirm) and len(password_confirm) < 4 and not password =='':
-            self.showError(_('Password is too short'))
+            self.showError(_("General", 'Password is too short'))
             return
         else:
             ctx.interface.informationWindow.hide()
@@ -250,14 +256,14 @@ class Widget(QWidget, ScreenWidget):
 
         # check user validity
         if user.exists() or (user.username in self.currentUsers() and self.edititemindex == None):
-            self.showError(_("This user name is already taken, please choose another one."))
+            self.showError(_("General", "This user name is already taken, please choose another one."))
             return False
         elif not user.usernameIsValid():
             # FIXME: Mention about what are the invalid characters!
-            self.showError(_("The user name contains invalid characters."))
+            self.showError(_("General", "The user name contains invalid characters."))
             return False
         elif not user.realnameIsValid():
-            self.showError(_("The real name contains invalid characters."))
+            self.showError(_("General", "The real name contains invalid characters."))
             return False
 
         # Dont check in edit mode
@@ -265,12 +271,12 @@ class Widget(QWidget, ScreenWidget):
             uid = self.ui.userID.value()
             if self.edititemindex == None:
                 if uid in self.used_ids:
-                    self.showError(_('User ID used before, choose another one!'))
+                    self.showError(_("General", 'User ID used before, choose another one!'))
                     return False
             self.used_ids.append(uid)
             user.uid = uid
 
-        self.ui.createButton.setText(_("Add"))
+        self.ui.createButton.setText(_("General", "Add"))
         self.ui.cancelButton.hide()
         update_item = None
 
@@ -313,7 +319,7 @@ class Widget(QWidget, ScreenWidget):
             self.used_ids.remove(item.uid)
         self.ui.userList.takeItem(_cur)
         self.ui.autoLogin.removeItem(_cur + 1)
-        self.ui.createButton.setText(_("Add"))
+        self.ui.createButton.setText(_("General", "Add"))
 
         icon = QIcon()
         icon.addPixmap(QPixmap(":/gui/pics/user-group-new.png"), QIcon.Normal, QIcon.Off)
@@ -343,7 +349,7 @@ class Widget(QWidget, ScreenWidget):
         self.ui.noPass.setChecked(user.no_password)
 
         self.edititemindex = self.ui.userList.currentRow()
-        self.ui.createButton.setText(_("Update"))
+        self.ui.createButton.setText(_("General", "Update"))
         icon = QIcon()
         icon.addPixmap(QPixmap(":/gui/pics/tick.png"), QIcon.Normal, QIcon.Off)
         self.ui.createButton.setIcon(icon)
@@ -397,7 +403,7 @@ class Widget(QWidget, ScreenWidget):
         if self.ui.cancelButton.isVisible():
             self.ui.cancelButton.setHidden(self.sender() == self.ui.cancelButton)
             self.checkUsers()
-        self.ui.createButton.setText(_("Add"))
+        self.ui.createButton.setText(_("General", "Add"))
         icon = QIcon()
         icon.addPixmap(QPixmap(":/gui/pics/user-group-new.png"), QIcon.Normal, QIcon.Off)
         self.ui.createButton.setIcon(icon)

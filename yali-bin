@@ -10,10 +10,18 @@
 #
 # Please read the COPYING file.
 #
+
 import os
 import sys
-import gettext
-_ = gettext.translation('yali', fallback=True).ugettext
+
+try:
+    from PyQt5.QtCore import QCoreApplication
+    _ = QCoreApplication.translate
+except:
+    _ = lambda x,y : " ".join(x,y)
+
+if os.path.exists("build/lib.linux-x86_64-2.7/yali/"):
+    sys.path.append("build/lib.linux-x86_64-2.7/yali/")
 
 import yali
 import yali.context as ctx
@@ -38,24 +46,29 @@ def load_config(options):
             options: Options parsed with optparse module
     """
     # Read configuration file
-    
-    if not os.path.exists(ctx.consts.conf_file):
-        ctx.logger.debug(_("%s is missing") % ctx.consts.conf_file)
+    if options.conffile:
+        if not os.path.exists(options.conffile):
+            if not os.path.exists(ctx.consts.conf_file):
+                ctx.logger.debug(_("General", "%s is missing") % ctx.consts.conf_file)
+                sys.exit(1)
+    elif not os.path.exists(ctx.consts.conf_file):
+        ctx.logger.debug(_("General", "%s is missing") % ctx.consts.conf_file)
         sys.exit(1)
-    
-    
+
 
     import ConfigParser
     parser = ConfigParser.ConfigParser()
 
     try:
-        parser.read(ctx.consts.conf_file)
+        if options.conffile and os.path.exists(options.conffile):
+            parser.read(options.conffile)
+        else:
+            parser.read(ctx.consts.conf_file)
     except IOError:
-        ctx.logger.debug(_("%s is corrupted") % ctx.consts.conf_file)
+        ctx.logger.debug(_("General", "%s is corrupted") % ctx.consts.conf_file)
         sys.exit(1)
-    
 
-    if parser.has_option("general", "installation"):
+    if parser.has_option("general", "installation") and options.install_type == ctx.STEP_DEFAULT:
         if parser.get("general", "installation") == "system":
             options.install_type = ctx.STEP_BASE
         elif parser.get("general", "installation") == "firstboot":
@@ -96,7 +109,7 @@ def load_config(options):
 
     if parser.has_option("general", "branding"):
         options.theme = parser.get("general", "branding")
-    
+
 def setup_environment():
     """
         Setup environment.
@@ -121,7 +134,7 @@ def setup_exception_handler():
 
         sio = cStringIO.StringIO()
 
-        sio.write(_("Please file a bug report to <http://bugs.pisilinux.org>.\n"))
+        sio.write(_("General", "Please file a bug report to <http://bugs.pisilinux.org>.\n"))
 
         _value = ''
         for arg in value.args:
@@ -130,14 +143,14 @@ def setup_exception_handler():
         sio.write(_value)
         sio.write(str(exception))
         sio.write('\n\n')
-        sio.write(_("Backtrace:"))
+        sio.write(_("General", "Backtrace:"))
         sio.write('\n')
         traceback.print_tb(error_traceback, None, sio)
 
         sio.seek(0)
         exception_traceback =  unicode(sio.read())
 
-        ctx.logger.debug(_("Unhandled internal YALI exception:%s") % exception_traceback)
+        ctx.logger.debug(_("General", "Unhandled internal YALI exception:%s") % exception_traceback)
 
         if ctx.interface:
             ctx.interface.exceptionWindow(exception, exception_traceback)
@@ -145,13 +158,15 @@ def setup_exception_handler():
     sys.excepthook = exception_handler
     signal.signal(signal.SIGTERM, signal_handler)
 
+
+
 def init_gui_interface():
     from yali.gui.interface import Interface
     ctx.interface = Interface()
 
-def init_gui_runner():
+def init_gui_runner(app):
     from yali.gui.runner import Runner
-    print("init gui")
+    #print("init gui")
     gui_runner = Runner(app)
     gui_runner.run()
 
@@ -194,14 +209,14 @@ def load_options(argv=None):
                       help="load given theme", type="str", default="pisilinux")
     parser.add_option("-b", "--branding", dest="branding",
                       help="load given branding", type="str", default="pisilinux")
-    
+
     return parser.parse_args(argv)
 
 def main():
     # Only root can run that application
     if os.getuid() != 0:
-        print "%s must be run as root." % sys.argv[0]
-        sys.exit(1)
+        print( "{} must be run as root.".format(sys.argv[0]))
+        return 1
 
     # Terminate plymouth daemon if needed
     if os.path.exists("/bin/plymouth") and not os.system("/bin/plymouth --ping"):
@@ -210,14 +225,17 @@ def main():
     ctx.logger.debug("Yali has been started")
     load_modules()
     setup_environment()
-    
+
     init_gui_interface()
-    
+
+
     setup_exception_handler()
-    
+
     (options, args) = load_options()
-    load_config(options)    # burada hata var
-    
+
+    load_config(options)
+
+
     ctx.flags.install_type = options.install_type
 
     ctx.flags.startup = options.startFrom
@@ -233,27 +251,25 @@ def main():
     ctx.flags.theme = options.theme
 
     ctx.flags.branding = options.branding
-    
-    
-    
+
     if options.kahya:
         ctx.flags.kahya = True
         ctx.flags.kahyaFile = options.kahya
-    
-    
+
+    app = QApplication(sys.argv)
+
     if not ctx.storage:
         from yali.storage import Storage
         ctx.storage = Storage()
-    
-    
+
+
     if not ctx.bootloader:
         from yali.storage.bootloader import BootLoader
         ctx.bootloader = BootLoader(ctx.storage)
-    
+
     ctx.flags.parse_kernel_options(ctx)
-    
-    print("basliyor")
-    init_gui_runner()
+
+    init_gui_runner(app)
 
 
 if __name__ == "__main__":

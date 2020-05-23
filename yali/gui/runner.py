@@ -13,9 +13,12 @@
 import os
 import sys
 import imp
-import gettext
 
-_ = gettext.translation('yali', fallback=True).ugettext
+try:
+	from PyQt5.QtCore import QCoreApplication
+	_ = QCoreApplication.translate
+except:
+	_ = lambda x,y: y
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QStyleFactory
@@ -38,18 +41,19 @@ import yali.gui
 import yali.gui.YaliWindow
 
 
-
 class Runner():
-    
+
     _window = None
     _application = None
-    
-    def __init__(self):
-        
-        self._application = QApplication(sys.argv)
+
+    def __init__(self, app=None):
+
+        if app is None:
+            self._application = QApplication(sys.argv)
+        else:
+            self._application = app
         self._window = None
-        
-        
+
         # Main Window Initialized..
         try:
             self._window = yali.gui.YaliWindow.Widget()
@@ -57,14 +61,16 @@ class Runner():
             ctx.logger.debug(msg)
             sys.exit(1)
 
-        self._translator = QTranslator()
-        self._translator.load("qt_" + QLocale.system().name(), QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+        # self._translator = QTranslator()
+        # self._translator.load("qt_" + QLocale.system().name(), QLibraryInfo.location(QLibraryInfo.TranslationsPath))
+        # print(QLocale.system().name())
+        # print(QLibraryInfo.location(QLibraryInfo.TranslationsPath))
 
         ctx.mainScreen = self._window
-        
+        # print(type(self._window))
         screens = self._get_screens(ctx.flags.install_type)
         self._set_steps(screens)
-        
+
         # These shorcuts for developers :)
         prevScreenShortCut = QShortcut(QKeySequence(Qt.SHIFT + Qt.Key_F1), self._window)
         nextScreenShortCut = QShortcut(QKeySequence(Qt.SHIFT + Qt.Key_F2), self._window)
@@ -73,7 +79,7 @@ class Runner():
 
         # VBox utils
         ctx.logger.debug("Starting VirtualBox tools..")
-        #FIXME:sh /etc/X11/Xsession.d/98-vboxclient.sh
+        # FIXME:sh /etc/X11/Xsession.d/98-vboxclient.sh
         yali.util.run_batch("VBoxClient", ["--autoresize"])
         yali.util.run_batch("VBoxClient", ["--clipboard"])
 
@@ -83,25 +89,29 @@ class Runner():
 
         # base connections
         self._application.lastWindowClosed.connect(self._application.quit)
-        self._window.signalProcessEvents.connect(self._application.processEvents)#hata olabilir
-        self._application.desktop().resized[int].connect(self._reinit_screen)   #hata olabilir
+        self._window.signalProcessEvents.connect(self._application.processEvents)  # hata olabilir
+        self._application.desktop().resized[int].connect(self._reinit_screen)  # hata olabilir
 
         # Font Resize
         fontMinusShortCut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Minus), self._window)
-        fontPlusShortCut  = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Plus) , self._window)
+        fontPlusShortCut = QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Plus), self._window)
         fontMinusShortCut.activated.connect(self._window.setFontMinus)
         fontPlusShortCut.activated.connect(self._window.setFontPlus)
 
     def _reinit_screen(self):
-        QTimer.singleShot(700,self._init_screen)
+        QTimer.singleShot(700, self._init_screen)
 
     def _init_screen(self):
         # We want it to be a full-screen window
         # inside the primary display.
         screen = self._application.desktop().screenGeometry()
-        self._window.resize(screen.size())
+        # canlı iso kurulumda tam ekran olmamalı
+        # self._window.resize(screen.size())
         self._window.setMaximumSize(screen.size())
-        self._window.move(screen.topLeft())
+        # FIXME: ui dosyasları görsellik açin yeniden düzenlenmeli
+        self._window.setGeometry(0,0,1120,630)
+        
+        #self._window.move(screen.topLeft())
         self._window.show()
 
     def _get_screens(self, install_type):
@@ -115,28 +125,28 @@ class Runner():
                 found = imp.find_module(module_name, yali.gui.__path__)
                 loaded = imp.load_module(module_name, *found)
                 screenClass = loaded.__dict__["Widget"]
-                
+
             except ImportError, msg:
                 ctx.logger.debug(msg)
-                rc = ctx.interface.messageWindow(_("Error!"),
-                                                 _("An error occurred when attempting "
+                rc = ctx.interface.messageWindow(_("General", "Error!"),
+                                                 _("General", "An error occurred when attempting "
                                                    "to load an installer interface "
                                                    "component.\n\nclassName = %s.Widget") % module_name,
                                                  type="custom", customIcon="warning",
-                                                 customButtons=[_("Exit"), _("Retry")])
-                
+                                                 customButtons=[_("General", "Exit"), _("General", "Retry")])
+
                 if not rc:
                     sys.exit(1)
             else:
                 screens.append(screenClass)
-        
+
         return screens
 
 
     def _set_steps(self, screens):
         self._window.createWidgets(screens)
         self._window.setCurrent(ctx.flags.startup)
-        
+
 
     def run(self):
         # Use default theme;
@@ -144,12 +154,11 @@ class Runner():
         self._application.setStyle(QStyleFactory.create('Brezee'))
         self._init_screen()
 
-        self._application.installTranslator(self._translator)
+        # self._application.installTranslator(self._translator)
 
         # For testing..
         # self._window.resize(QSize(800,600))
-
+        # print(dir(self._window))
         # Run run run
         self._window.show()
         self._application.exec_()
-
