@@ -122,6 +122,7 @@ class YaliUninstall(Command):
 class I18nInstall(install):
     def run(self):
         install.run(self)
+        release_messages()
         for lang in I18N_LANGUAGES:
             print("Installing '%s' translations..." % lang)
             os.popen("msgfmt po/%s.po -o po/%s.mo" % (lang, lang))
