@@ -4,10 +4,11 @@
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
-    _ = lambda x,y: y
+except Exception:
+    _ = lambda x, y: y
 
 from yali.gui.YaliDialog import MessageWindow, InformationWindow, ProgressWindow, ExceptionWindow
+
 
 class Interface(object):
     def __init__(self):

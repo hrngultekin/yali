@@ -17,11 +17,11 @@ import sys
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
+except Exception:
     _ = lambda x,y : " ".join(x,y)
 
-if os.path.exists("build/lib.linux-x86_64-2.7/yali/"):
-    sys.path.append("build/lib.linux-x86_64-2.7/yali/")
+# if os.path.exists("build/lib.linux-x86_64-2.7/yali/"):
+    # sys.path.append("build/lib.linux-x86_64-2.7/yali/")
 
 import yali
 import yali.context as ctx
@@ -55,7 +55,6 @@ def load_config(options):
         ctx.logger.debug(_("General", "%s is missing") % ctx.consts.conf_file)
         sys.exit(1)
 
-
     import ConfigParser
     parser = ConfigParser.ConfigParser()
 
@@ -82,27 +81,27 @@ def load_config(options):
 
     if parser.has_option("general", "debug"):
         if parser.get("general", "debug") == "True":
-            options.debug =  True
+            options.debug = True
         else:
-            options.debug =  False
+            options.debug = False
 
     if parser.has_option("general", "collection"):
         if parser.get("general", "collection") == "False":
-            options.collection =  False
+            options.collection = False
         else:
-            options.collection =  True
+            options.collection = True
 
     if parser.has_option("general", "baseonly"):
         if parser.get("general", "baseonly") == "True":
-            options.baseonly =  True
+            options.baseonly = True
         else:
-            options.baseonly =  False
+            options.baseonly = False
 
     if parser.has_option("general", "dryrun"):
         if parser.get("general", "dryrun") == "True":
-            options.dryRun =  True
+            options.dryRun = True
         else:
-            options.dryRun =  False
+            options.dryRun = False
 
     if parser.has_option("general", "theme"):
         options.theme = parser.get("general", "theme")
@@ -110,24 +109,43 @@ def load_config(options):
     if parser.has_option("general", "branding"):
         options.theme = parser.get("general", "branding")
 
+    if parser.has_option("repo", "name"):
+        ctx.consts.pisilinux_repo_name = parser.get("repo", "name")
+    else:
+        ctx.consts.pisilinux_repo_name = "@REPO_NAME@"
+        raise Exception(_("repo name not found. set repo name on yali.conf"))
+
+    if parser.has_option("repo", "uri"):
+        ctx.consts.pisilinux_repo_uri = parser.get("repo", "uri")
+    else:
+        ctx.consts.pisilinux_repo_uri = "@REPO_URI@"
+        raise Exception(_("repo uri not found. set repo uri on yali.conf"))
+
+    print(ctx.consts.pisilinux_repo_name)
+    print(ctx.consts.pisilinux_repo_uri)
+
+
 def setup_environment():
     """
         Setup environment.
 
     """
     import locale
-    #FIXME:Why do we need this?
+    # FIXME:Why do we need this?
     locale.setlocale(locale.LC_ALL, "")
     os.environ['LC_NUMERIC'] = 'C'
     os.environ["LVM_SUPPRESS_FD_WARNINGS"] = "1"
+
 
 def setup_exception_handler():
     import signal
     import traceback
     import cStringIO
+
     def signal_handler(sig, frame):
         if sig == signal.SIGTERM:
             sys.exit(1)
+
     def exception_handler(exception, value, error_traceback):
         """ YALI exception handler for showing exceptions in GUI """
         signal.signal(signal.SIGINT, signal.SIG_IGN)   # disable further interrupts
@@ -148,7 +166,7 @@ def setup_exception_handler():
         traceback.print_tb(error_traceback, None, sio)
 
         sio.seek(0)
-        exception_traceback =  unicode(sio.read())
+        exception_traceback = unicode(sio.read())
 
         ctx.logger.debug(_("General", "Unhandled internal YALI exception:%s") % exception_traceback)
 
@@ -159,16 +177,17 @@ def setup_exception_handler():
     signal.signal(signal.SIGTERM, signal_handler)
 
 
-
 def init_gui_interface():
     from yali.gui.interface import Interface
     ctx.interface = Interface()
 
+
 def init_gui_runner(app):
     from yali.gui.runner import Runner
-    #print("init gui")
+
     gui_runner = Runner(app)
     gui_runner.run()
+
 
 def load_options(argv=None):
     from optparse import OptionParser
@@ -189,7 +208,7 @@ def load_options(argv=None):
                       help="install collection base installation"
                            " if collections exist")
     parser.add_option("--system", dest="install_type", default=0,
-                      action="store_const", const= 1,
+                      action="store_const", const=1,
                       help="start system installation")
     parser.add_option("--firstboot", dest="install_type",
                       action="store_const", const=2,
@@ -208,14 +227,16 @@ def load_options(argv=None):
     parser.add_option("-t", "--theme", dest="theme",
                       help="load given theme", type="str", default="pisilinux")
     parser.add_option("-b", "--branding", dest="branding",
-                      help="load given branding", type="str", default="pisilinux")
+                      help="load given branding", type="str",
+                      default="pisilinux")
 
     return parser.parse_args(argv)
+
 
 def main():
     # Only root can run that application
     if os.getuid() != 0:
-        print( "{} must be run as root.".format(sys.argv[0]))
+        print("{} must be run as root.".format(sys.argv[0]))
         return 1
 
     # Terminate plymouth daemon if needed
@@ -227,14 +248,12 @@ def main():
     setup_environment()
 
     init_gui_interface()
-    
 
     setup_exception_handler()
 
     (options, args) = load_options()
 
     load_config(options)
-
 
     ctx.flags.install_type = options.install_type
 
@@ -261,7 +280,6 @@ def main():
     if not ctx.storage:
         from yali.storage import Storage
         ctx.storage = Storage()
-
 
     if not ctx.bootloader:
         from yali.storage.bootloader import BootLoader

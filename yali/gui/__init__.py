@@ -12,44 +12,53 @@
 import yali
 import yali.context as ctx
 
+
 class GUIError(yali.Error):
     pass
 
 
-GUI_STEPS = {ctx.STEP_DEFAULT:("info","license", "mediaCheck", "keyboardSetup",
-                               "timeSetup", "accounts", "admin", "driveSelection",
-                               "automaticPartitioning", "manualPartitioning", "bootloadersetup",
-                               "collectionSelection", "summary", "packageInstallation", "goodbye"),
-             ctx.STEP_BASE:("info","license", "mediaCheck", "keyboardSetup",
-                            "timeSetup", "driveSelection", "automaticPartitioning",
-                            "manualPartitioning", "bootloadersetup", "collectionSelection",
-                            "summary", "packageInstallation", "goodbye"),
-             ctx.STEP_OEM_INSTALL:("info","license", "mediaCheck", "keyboardSetup", "driveSelection",
-                                   "automaticPartitioning", "manualPartitioning", "bootloadersetup",
-                                   "collectionSelection", "summary", "packageInstallation", "goodbye"),
-             ctx.STEP_FIRST_BOOT:("welcome", "accounts", "admin", "summary", "goodbye"),
-             ctx.STEP_RESCUE:("rescue", "bootloadersetup", "passwordRescue", "goodbye")}
+# mediaCheck kaldırılmalı
+# GUI_STEPS = {ctx.STEP_DEFAULT:("info","license","mediaCheck","keyboardSetup",
+GUI_STEPS = {
+    ctx.STEP_DEFAULT: (
+        "info", "license", "keyboardSetup",
+        "timeSetup", "accounts", "admin", "driveSelection",
+        "automaticPartitioning", "manualPartitioning", "bootloadersetup",
+        "collectionSelection", "summary", "packageInstallation", "goodbye"),
+    ctx.STEP_BASE: (
+        "info", "license", "mediaCheck", "keyboardSetup",
+        "timeSetup", "driveSelection", "automaticPartitioning",
+        "manualPartitioning", "bootloadersetup", "collectionSelection",
+        "summary", "packageInstallation", "goodbye"),
+    ctx.STEP_OEM_INSTALL: (
+        "info", "license", "mediaCheck", "keyboardSetup", "driveSelection",
+        "automaticPartitioning", "manualPartitioning", "bootloadersetup",
+        "collectionSelection", "summary", "packageInstallation", "goodbye"),
+    ctx.STEP_FIRST_BOOT: ("welcome", "accounts", "admin", "summary", "goodbye"),
+    ctx.STEP_RESCUE: ("rescue", "bootloadersetup", "passwordRescue", "goodbye")}
 
-stepToClass = {"info":"ScrInfo",
-               "license":"ScrLicense",
-               "network":"ScrNetwork",
-               "welcome":"ScrWelcome",
-               "mediaCheck":"ScrCheckCD",
-               "keyboardSetup":"ScrKeyboard",
-               "timeSetup":"ScrDateTime",
-               "accounts":"ScrUsers",
-               "admin":"ScrAdmin",
-               "driveSelection":"ScrDriveSelection",
-               "automaticPartitioning":"ScrPartitionAuto",
-               "manualPartitioning":"ScrPartitionManual",
-               "bootloadersetup":"ScrBootloader",
-               "collectionSelection":"ScrCollection",
-               "summary":"ScrSummary",
-               "packageInstallation":"ScrInstall",
-               "goodbye":"ScrGoodbye",
-               "rescue":"ScrRescue",
-               "passwordRescue":"ScrRescuePassword"
+
+stepToClass = {"info": "ScrInfo",
+               "license": "ScrLicense",
+               "network": "ScrNetwork",
+               "welcome": "ScrWelcome",
+               "mediaCheck": "ScrCheckCD",
+               "keyboardSetup": "ScrKeyboard",
+               "timeSetup": "ScrDateTime",
+               "accounts": "ScrUsers",
+               "admin": "ScrAdmin",
+               "driveSelection": "ScrDriveSelection",
+               "automaticPartitioning": "ScrPartitionAuto",
+               "manualPartitioning": "ScrPartitionManual",
+               "bootloadersetup": "ScrBootloader",
+               "collectionSelection": "ScrCollection",
+               "summary": "ScrSummary",
+               "packageInstallation": "ScrInstall",
+               "goodbye": "ScrGoodbye",
+               "rescue": "ScrRescue",
+               "passwordRescue": "ScrRescuePassword"
                }
+
 
 class ScreenWidget:
     _id = 0
@@ -75,7 +84,3 @@ class ScreenWidget:
     def backCheck(self):
         """Calling when Screen backButton clicked"""
         return True
-    
-    
-
-

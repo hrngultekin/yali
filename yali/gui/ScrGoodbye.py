@@ -56,7 +56,7 @@ class Widget(QWidget, ScreenWidget):
                 if result == "no": restart = False
             else:
                 InfoDialog(_("General", "Press <b>Restart</b> to restart the computer."), _("General", "Restart"))
-            
+
             if restart:
                 ctx.interface.informationWindow.update(_("General", "<b>Please wait while restarting...</b>"))
                 ctx.logger.debug("Trying to eject the CD.")

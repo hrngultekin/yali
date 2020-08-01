@@ -10,9 +10,7 @@
 # Please read the COPYING file.
 #
 import os
-from string import letters
-from multiprocessing import Process, Queue  # , cpu_count
-import subprocess
+from multiprocessing import Process, Queue
 from Queue import Empty
 
 try:
@@ -141,7 +139,7 @@ class Widget(QWidget, ScreenWidget):
         self.mutex = QMutex()
         self.wait_condition = QWaitCondition()
         self.queue = Queue()
-        self.pkg_installer = SqfsInstaller(
+        self.pkg_installer = PkgInstaller(
             self.queue, self.mutex, self.wait_condition, self.retry_answer)
 
         self.poll_timer.start(500)
@@ -170,13 +168,12 @@ class Widget(QWidget, ScreenWidget):
             ctx.logger.debug("checkQueueEvent: Processing %s event..." % event)
             # EventInstall
             if event == EventInstall:
-                # FIXME: mesajlar düzenlenecek
-                percent = data[1]
+                package = data[1]
                 self.installProgress.ui.info.setText(
-                    _("General",
-                      "Installing <b>{percent:.2f}%</b>".format(percent=percent)))
-                ctx.logger.debug("Sqfs: installing {}%".format(percent))
-                self.cur = percent
+                    _("General", "Installing <b>%(name)s</b> -- %(summary)s") %
+                    {"name": package.name, "summary": package.summary})
+                ctx.logger.debug("Pisi: %s installing" % package.name)
+                self.cur += 1
                 self.installProgress.ui.progress.setValue(self.cur)
 
             # EventConfigure
@@ -195,10 +192,8 @@ class Widget(QWidget, ScreenWidget):
 
             # EventPackageInstallFinished
             elif event == EventPackageInstallFinished:
-                # print("***EventPackageInstallFinished called....")
-                # self.packageInstallFinished()
-                self.sqfsInstallFinished()
-                event = EventAllFinished
+                print("***EventPackageInstallFinished called....")
+                self.packageInstallFinished()
 
             # EventError
             elif event == EventError:
@@ -226,7 +221,7 @@ class Widget(QWidget, ScreenWidget):
                 self.wait_condition.wakeAll()
 
             # EventAllFinished
-            if event == EventAllFinished:
+            elif event == EventAllFinished:
                 self.finished()
 
     def changeSlideshows(self):
@@ -238,77 +233,6 @@ class Widget(QWidget, ScreenWidget):
         else:
             description = slide["description"]["en"]
         self.ui.slideText.setText(description)
-
-    def sqfsInstallFinished(self):
-        yali.postinstall.writeFstab()
-
-        # Configure Pending...
-        # run baselayout's postinstall first
-        yali.postinstall.initbaselayout()
-
-        # postscripts depend on 03locale...
-        yali.util.writeLocaleFromCmdline()
-
-        # Write InitramfsConf
-        yali.postinstall.writeInitramfsConf()
-
-        # set resume param in /etc/default/grub
-        yali.postinstall.setGrubResume()
-
-        # copy needed files
-        # yali.util.cp("/etc/resolv.conf", "%s/etc/" % ctx.consts.target_dir)
-
-        # run dbus in chroot
-        yali.util.start_dbus()
-
-        yali.util.run_batch(
-            "rm -rf {}/etc/polkit-1/localauthority/90-mandatory.d/".format(
-                ctx.consts.target_dir))
-        yali.util.run_batch(
-            "rm -rf {}/run/livemedia".format(ctx.consts.target_dir))
-        # mount -B /run/udev target_dir/run/udev
-        yali.util.run_batch(
-            "cp -rf /var/cache/pisi/packages/*.pisi {}/var/cache/pisi/".format(
-                ctx.consts.target_dir))
-        yali.util.chroot("pisi it --rei --ignore-file-conflicts \
-            /var/cache/pisi/packages/*.pisi")
-
-        yali.util.chroot("pisi rm --purge yali yali-branding-pisilinux \
-            yali-theme-pisilinux")
-
-        # WARNING: çalışmadı tekrar dene
-        yali.util.run_batch(
-            "cp -f /etc/resolv.conf {}/etc/resolv.conf".format(
-                ctx.consts.target_dir))
-        # print(yali.util.chroot2("pisi lr")[1])
-        yali.util.chroot("pisi rr live")
-        # print(ctx.consts.pisilinux_repo_name)
-        # print(ctx.consts.pisilinux_repo_uri)
-        # print("<"*79)
-        yali.util.chroot(
-            "pisi ar {} {}".format(
-                ctx.consts.pisilinux_repo_name,
-                ctx.consts.pisilinux_repo_uri))
-        # print(yali.util.chroot2("pisi lr")[1])
-
-        import ConfigParser
-        cfg = ConfigParser.ConfigParser()
-        cfg.optionxform = str
-        cfg.read("{}/etc/sddm.conf".format(ctx.consts.target_dir))
-
-        cfg.set("Autologin", "Session", "")
-        cfg.set("Autologin", "User", "")
-
-        with open("{}/etc/sddm.conf".format(ctx.consts.target_dir), "w") as f:
-            cfg.write(f)
-
-        # WARNING: /etc/inittab düzenlenecek (root oto giriş iptali için)
-        yali.util.dosed(
-            "{}/etc/inittab".format(ctx.consts.target_dir),
-            "(.*) --autologin root (tty[1|2])", "\\1 \\2")
-        yali.util.dosed(
-            "{}/etc/inittab".format(ctx.consts.target_dir),
-            "(.*) --noclear --autologin root (tty[3-6])", "\\1 \\2")
 
     def packageInstallFinished(self):
         yali.postinstall.writeFstab()
@@ -356,86 +280,6 @@ This may be caused by a corrupted installation medium error:
 """) % str(error)
         ctx.interface.exceptionWindow(error, errorstr)
         ctx.logger.error("Package installation failed error with:%s" % error)
-
-
-# FIXME: sınıf tamamlanacak
-class SqfsInstaller(Process):
-    def __init__(self, queue, mutex, wait_condition, retry_answer):
-        Process.__init__(self)
-        self.queue = queue
-        self.mutex = mutex
-        self.wait_condition = wait_condition
-        self.retry_answer = retry_answer
-        ctx.logger.debug("SqfsInstaller started.")
-
-    def run(self):
-        ctx.logger.debug("PkgInstaller is running.")
-        ui = SqfsUI(self.queue)
-        ui.run()
-        ctx.logger.debug("PisiUI is creating..")
-        ctx.logger.debug("Pisi initialize is calling..")
-
-        data = [EventPackageInstallFinished]
-        self.queue.put_nowait(data)
-
-
-class SqfsUI:
-
-    def __init__(self, queue):
-        self.queue = queue
-        self.percent = 0
-
-        yali.util.run_batch("mkdir /mnt/sqfs")
-        yali.util.run_batch("mount {} /mnt/sqfs".format(ctx.consts.sqfs_file))
-
-    def notify(self, **keywords):
-        ctx.logger.debug("SqfsUI.notify event: Install")
-        data = [EventInstall, self.percent]
-        self.queue.put_nowait(data)
-
-    def run(self):
-        total = 100
-        ctx.logger.debug("Sending EventSetProgress")
-        data = [EventSetProgress, total]
-        self.queue.put_nowait(data)
-
-        process = subprocess.Popen(
-            "unsquashfs -l {sqfs} | wc -l".format(
-                sqfs=ctx.consts.sqfs_file),
-            shell=True, stdout=subprocess.PIPE)
-        total = float(int(process.communicate()[0].rstrip()) - 3)
-
-        rsync_env = os.environ.copy()
-        rsync_env['LC_ALL'] = "C"
-        process = subprocess.Popen(
-            "rsync -aHAXr --progress {sqfs_dir}/* {dir}".format(
-                dir=ctx.consts.target_dir,
-                sqfs_dir="/mnt/sqfs"), env=rsync_env,
-            shell=True, stdout=subprocess.PIPE)
-
-        count = 0
-        for line in iter(process.stdout.readline, b''):
-            try:
-                if (line[0] in letters) or line[0] == "\\":
-                    line = line.rstrip()
-                    count += 1
-                    self.percent = count / total * 100
-                    if self.percent > 100:
-                        self.percent = 100.0
-                    # print(self.percent, count, total)
-            except Exception as e:
-                self.error(e)
-            self.notify()
-
-        self.percent = 100
-        self.notify()
-        yali.util.run_batch("umount /mnt/sqfs")
-
-    def error(self, msg):
-        ctx.logger.debug("SqfsUI.error: %s" % unicode(msg))
-
-    def warning(self, msg):
-        ctx.logger.debug("SqfsUI.warning: %s" % unicode(msg))
 
 
 class PkgInstaller(Process):

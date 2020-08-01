@@ -16,12 +16,13 @@ import codecs
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
+except Exception:
     _ = lambda x,y: y
 
 from PyQt5.QtCore import (QResource, pyqtSignal, QObject, Qt, QTimer, QSize)
 
-from PyQt5.QtWidgets import (QWidget, QAction, QTextBrowser, QGraphicsOpacityEffect, QMenu, QShortcut)
+from PyQt5.QtWidgets import (QWidget, QAction, QTextBrowser,
+                             QGraphicsOpacityEffect, QMenu, QShortcut)
 
 from PyQt5.QtGui import (QPixmap, QCursor, QPixmap, QKeySequence, QIcon)
 
@@ -54,10 +55,10 @@ class HelpWidget(PAbstractBox):
         self.hide()
 
     def showHelp(self):
-        QTimer.singleShot(1, lambda: self.animate(start = TOPCENTER, stop = TOPCENTER))
+        QTimer.singleShot(1, lambda: self.animate(start=TOPCENTER, stop=TOPCENTER))
 
     def hideHelp(self):
-        self.animate(start = CURRENT, stop  = TOPCENTER, direction = OUT)
+        self.animate(start=CURRENT, stop=TOPCENTER, direction=OUT)
 
     def toggleHelp(self):
         if self.isVisible():
@@ -68,12 +69,13 @@ class HelpWidget(PAbstractBox):
     def setHelp(self, help):
         QTimer.singleShot(1, self.adjustSize)
 
+
 ##
 # Widget for YaliWindow (you can call it MainWindow too ;).
 class Widget(QWidget):
     signalProcessEvents = pyqtSignal()
     currentLanguageChanged = pyqtSignal()
-    
+
     def __init__(self):
         super(Widget, self).__init__(None)
         # Set pixmaps resource before Main Window initialized
@@ -99,16 +101,15 @@ class Widget(QWidget):
         self.help_shortcut = QShortcut(QKeySequence(Qt.Key_F1), self)
 
         # shortcut to open debug window
-        #self.debugShortCut = QtWidgets.QShortcut(QtWidgets.QKeySequence(Qt.Key_F2),self)
+        # self.debugShortCut = QtWidgets.QShortcut(QtWidgets.QKeySequence(Qt.Key_F2),self)
 
         # something funny
         self.tetris_shortcut = QShortcut(QKeySequence(Qt.Key_F6), self)
         self.cursor_shortcut = QShortcut(QKeySequence(Qt.Key_F7), self)
-        self.theme_shortcut  = QShortcut(QKeySequence(Qt.Key_F8), self)
+        self.theme_shortcut = QShortcut(QKeySequence(Qt.Key_F8), self)
 
         # shortcut to open a console
         self.console_shortcut = QShortcut(QKeySequence(Qt.Key_F11), self)
-
 
         # set style
         self._style = os.path.join(ctx.consts.theme_dir, ctx.flags.theme, ctx.consts.style_file)
@@ -124,7 +125,6 @@ class Widget(QWidget):
         else:
             raise yali.Error, _("General", "Release file doesn't exists")
 
-
         # move one step at a time
         self.step_increment = 1
 
@@ -133,13 +133,13 @@ class Widget(QWidget):
         self.shutdown = self.menu.addAction(QIcon(QPixmap(":/images/system-shutdown.png")), _("General", "Turn Off Computer"))
         self.reboot = self.menu.addAction(QIcon(QPixmap(":/images/system-reboot.png")), _("General", "Restart Computer"))
         self.restart = self.menu.addAction(QIcon(QPixmap(":/images/system-yali-reboot.png")), _("General", "Restart YALI"))
-        #self.menu.setDefaultAction(self.shutdown)
+        # self.menu.setDefaultAction(self.shutdown)
         self.ui.system_menu.setMenu(self.menu)
         self.ui.system_menu.setDefaultAction(self.shutdown)
 
         # Main Slots
         self.help_shortcut.activated.connect(self.pds_helper.toggleHelp)
-        #self.debugShortCut.activated.connect(self.toggleDebug)
+        # self.debugShortCut.activated.connect(self.toggleDebug)
         self.console_shortcut.activated.connect(self.toggleConsole)
         self.cursor_shortcut.activated.connect(self.toggleCursor)
         self.theme_shortcut.activated.connect(self.toggleTheme)
@@ -205,7 +205,8 @@ class Widget(QWidget):
     def slotMenu(self, action):
         if action == self.shutdown:
             reply = QuestionDialog(_("General", "Warning"),
-                                   _("General", "Are you sure you want to shut down your computer now?"))
+                                   _("General", "Are you sure you want to "
+                                     "shut down your computer now?"))
             if reply == "yes":
                 yali.util.shutdown()
         elif action == self.reboot:
@@ -236,12 +237,16 @@ class Widget(QWidget):
             terminal.setScrollBarPosition(QTermWidget.ScrollBarRight)
             terminal.setColorScheme(1)
             terminal.sendText("export TERM='xterm'\nclear\n")
-            self.terminal = Dialog(_("General", "Terminal"), terminal, True, QKeySequence(Qt.Key_F11))
+            self.terminal = Dialog(
+                _("General", "Terminal"), terminal, True,
+                QKeySequence(Qt.Key_F11))
+
             self.terminal.resize(700, 500)
         self.terminal.exec_()
 
     def toggleTetris(self):
-        self.tetris = Dialog(_("General", "Tetris"), None, True, QKeySequence(Qt.Key_F6))
+        self.tetris = Dialog(
+            _("General", "Tetris"), None, True, QKeySequence(Qt.Key_F6))
         _tetris = Tetris(self.tetris)
         self.tetris.addWidget(_tetris)
         self.tetris.resize(240, 500)
@@ -275,7 +280,7 @@ class Widget(QWidget):
 
     # returns the id of current stack
     def getCurrent(self, index):
-        new_index   = self.ui.mainStack.currentIndex() + index
+        new_index = self.ui.mainStack.currentIndex() + index
         total_index = self.ui.mainStack.count()
         if new_index < 0: new_index = 0
         if new_index > total_index: new_index = total_index
@@ -324,12 +329,14 @@ class Widget(QWidget):
 
             widget_icon = self.screens_content[widget_id][0]
 
-            if self.screens_content[widget_id][1].has_key(ctx.lang):
+            # if self.screens_content[widget_id][1].has_key(ctx.lang):
+            if ctx.lang in self.screens_content[widget_id][1]:
                 widget_title = self.screens_content[widget_id][1][ctx.lang]
             else:
                 widget_title = self.screens_content[widget_id][1]["en"]
 
-            if self.screens_content[widget_id][2].has_key(ctx.lang):
+            # if self.screens_content[widget_id][2].has_key(ctx.lang):
+            if ctx.lang in self.screens_content[widget_id][2]:
                 widget_help = self.screens_content[widget_id][2][ctx.lang]
             else:
                 widget_help = self.screens_content[widget_id][2]["en"]
@@ -337,7 +344,8 @@ class Widget(QWidget):
             self.ui.screenName.setText(widget_title)
             self.pds_helper.ui.helpContent.setText(widget_help)
             self.pds_helper.setHelp(widget_help)
-            self.ui.screenIcon.setPixmap(QPixmap(":/gui/pics/%s.png" % (widget_icon)))
+            self.ui.screenIcon.setPixmap(
+                QPixmap(":/gui/pics/%s.png" % (widget_icon)))
 
             ctx.mainScreen.processEvents()
             widget.update()
@@ -362,9 +370,9 @@ class Widget(QWidget):
         self.ui.mainStack.removeWidget(self.ui.page)
 
         for screen in screens:
-            #if ctx.flags.debug:
-                # debug all screens.
-            #    weave_all_object_methods(ctx.aspect, screen)
+            # if ctx.flags.debug:
+            #     debug all screens.
+            #     weave_all_object_methods(ctx.aspect, screen)
 
             # enable navigation buttons before shown
             weave_object_method(enableNavButtonsAspect, screen, "shown")
@@ -373,15 +381,16 @@ class Widget(QWidget):
             try:
                 self.ui.mainStack.addWidget(screen())
             except Exception, msg:
-                rc = ctx.interface.messageWindow(_("General", "Error"),
-                                                 _("General", "An error occurred when attempting "
-                                                    "to load screens:%s") % msg,
-                                                 type="custom", customIcon="error",
-                                                 customButtons=[_("General", "Exit")])
+                rc = ctx.interface.messageWindow(
+                    _("General", "Error"),
+                    _("General", "An error occurred when attempting "
+                                 "to load screens:%s") % msg,
+                    type="custom", customIcon="error",
+                    customButtons=[_("General", "Exit")])
                 if not rc:
                     sys.exit(0)
 
-        #weave_all_object_methods(ctx.aspect, self)
+        # weave_all_object_methods(ctx.aspect, self)
         self.stackMove(ctx.flags.startup)
 
     # Enable/Disable buttons
@@ -412,13 +421,14 @@ class Widget(QWidget):
         dialog = Dialog(_("General", 'Release Notes'), ReleaseNotes(self), self)
         dialog.resize(500, 400)
         dialog.exec_()
-        
+
     def retranslateUi(self):
         self.shutdown.setText(_("General", "Turn Off Computer"))
         self.reboot.setText(_("General", "Restart Computer"))
         self.restart.setText(_("General", "Restart YALI"))
-        
+
         self.currentLanguageChanged.emit()
+
 
 class ReleaseNotes(QTextBrowser):
 
@@ -431,13 +441,16 @@ class ReleaseNotes(QTextBrowser):
             self.setText(codecs.open(self.loadFile(), "r", "UTF-8").read())
         except Exception, msg:
             ctx.logger.error(_("General", "An error occurred when showing "
-                                                    "to release nostes:%s") % (msg))
+                                          "to release nostes:%s") % (msg))
 
     def loadFile(self):
-        releasenotes_path = os.path.join(ctx.consts.source_dir,"release-notes/releasenotes-%s.html" % ctx.lang)
+        releasenotes_path = os.path.join(
+            ctx.consts.source_dir,
+            "release-notes/releasenotes-%s.html" % ctx.lang)
 
         if not os.path.exists(releasenotes_path):
-            releasenotes_path = os.path.join(ctx.consts.source_dir, "release-notes", "releasenotes-en.html")
+            releasenotes_path = os.path.join(
+                ctx.consts.source_dir, "release-notes", "releasenotes-en.html")
         if os.path.exists(releasenotes_path):
             return releasenotes_path
         raise Exception, _("General", "Release notes could not be loaded.")

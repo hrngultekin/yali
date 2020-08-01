@@ -19,7 +19,7 @@ import shutil
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
+except Exception:
     _ = lambda x,y: y
 
 import yali.util
@@ -30,6 +30,7 @@ import yali.context as ctx
 
 class Operation:
     _id = 0
+
     def __init__(self, information, method):
         self._id = Operation._id
         Operation._id += 1
@@ -49,6 +50,7 @@ class Operation:
         time.sleep(0.5)
         ctx.interface.informationWindow.hide()
 
+
 def initbaselayout():
     # create /etc/hosts
     yali.util.cp("usr/share/baselayout/hosts", "etc/hosts")
@@ -59,23 +61,30 @@ def initbaselayout():
     # /etc/passwd, /etc/shadow, /etc/group
     yali.util.cp("usr/share/baselayout/passwd", "etc/passwd")
     yali.util.cp("usr/share/baselayout/shadow", "etc/shadow")
-    os.chmod(os.path.join(ctx.consts.target_dir, "etc/shadow"), 0600)
+    os.chmod(os.path.join(ctx.consts.target_dir, "etc/shadow"), 0o600)
     yali.util.cp("usr/share/baselayout/group", "etc/group")
 
     # create empty log file
     yali.util.touch("var/log/lastlog")
 
-    yali.util.touch("run/utmp", 0664)
+    yali.util.touch("run/utmp", 0o664)
     yali.util.chgrp("run/utmp", "utmp")
 
-    yali.util.touch("var/log/wtmp", 0664)
+    yali.util.touch("var/log/wtmp", 0o664)
     yali.util.chgrp("var/log/wtmp", "utmp")
 
+    # FIXME: sqfs ile kurulumda bu kısım en son eklenmeli
     # create needed device nodes
+    os.system("umount %s/dev" % ctx.consts.target_dir)
+    os.system("rm -rf %s/dev/*" % ctx.consts.target_dir)
+
     os.system("/bin/mknod %s/dev/console c 5 1" % ctx.consts.target_dir)
     os.system("/bin/mknod %s/dev/null c 1 3" % ctx.consts.target_dir)
     os.system("/bin/mknod %s/dev/random c 1 8" % ctx.consts.target_dir)
     os.system("/bin/mknod %s/dev/urandom c 1 9" % ctx.consts.target_dir)
+
+    os.system("mount -B /dev/ %s/dev" % ctx.consts.target_dir)
+
 
 def setupTimeZone():
     if ctx.storage.storageset.active:
@@ -86,6 +95,7 @@ def setupTimeZone():
     else:
         ctx.logger.debug("setTimeZone: StorageSet not activated")
         return False
+
 
 def setHostName():
     if yali.util.check_link() and ctx.installData.hostName:
@@ -100,33 +110,58 @@ def setHostName():
         ctx.logger.debug("Setting hostname execution failed.")
         return False
 
+
 def setupUsers():
     if yali.util.check_link() and yali.users.PENDING_USERS:
+        # sqfs user (pisi) remove with files
+        print("==== deleteUser ====")
+        try:
+            ctx.link.User.Manager["baselayout"].deleteUser(1000, True)
+            if os.path.exists("%s/home/pisi" % ctx.consts.target_dir):
+                os.system(" rm -rf %s/home/pisi" % ctx.consts.target_dir)
+        except Exception as e:
+            print("deleteUser Error: %s" % e)
+        print("==== deleteUser ====")
+
         for user in yali.users.PENDING_USERS:
             ctx.logger.info("User %s adding to system" % user.username)
             try:
+                print("===== user =====")
+                print(user.groups)
+                print("===== user =====")
                 user_id = ctx.link.User.Manager["baselayout"].addUser(user.uid, user.username, user.realname, "", "",
                                                                       unicode(user.passwd), user.groups, [], [])
-            except dbus.DBusException:
+                # user_id = ctx.link.User.Manager["baselayout"].addUser(
+                #     user.uid, user.username, user.realname, "", "",
+                #     unicode(user.passwd), user.groups, [], [])
+            except dbus.DBusException as e:
                 ctx.logger.error("Adding user failed")
+                print(e)
                 return False
             else:
                 ctx.logger.debug("New user's id is %s" % user_id)
                 # Set no password ask for PolicyKit
                 if user.no_password and ctx.link:
-                    ctx.link.User.Manager["baselayout"].grantAuthorization(user_id, "*")
+                    ctx.link.User.Manager["baselayout"].grantAuthorization(
+                        user_id, "*")
 
-                # If new user id is different from old one, we need to run a huge chown for it
+                # If new user id is different from old one,
+                # we need to run a huge chown for it
                 user_dir = ""
                 if ctx.flags.install_type == ctx.STEP_BASE or ctx.flags.install_type == ctx.STEP_DEFAULT:
-                    user_dir = os.path.join(ctx.consts.target_dir, 'home', user.username)
+                    user_dir = os.path.join(
+                        ctx.consts.target_dir, 'home', user.username)
                 if ctx.flags.install_type == ctx.STEP_FIRST_BOOT:
-                    user_dir = os.path.join(ctx.consts.root_dir, 'home', user.username)
+                    user_dir = os.path.join(
+                        ctx.consts.root_dir, 'home', user.username)
 
                 user_dir_id = os.stat(user_dir)[4]
                 if not user_dir_id == user_id:
-                    ctx.interface.informationWindow.update(_("General", "Preparing home directory for %s...") % user.username)
-                    yali.util.run_batch("chown", ["-R", "%d:100" % user_id, user_dir])
+                    ctx.interface.informationWindow.update(
+                        _("General", "Preparing home directory for %s...\
+                        ") % user.username)
+                    yali.util.run_batch(
+                        "chown", ["-R", "%d:100" % user_id, user_dir])
                     ctx.interface.informationWindow.hide()
 
                 yali.util.run_batch("chmod", ["0711"])
@@ -139,13 +174,16 @@ def setupUsers():
 
         return False
 
+
 def setPassword(uid=0, password=""):
     if yali.util.check_link() and password:
         ctx.logger.info("Getting users from system")
         info = ctx.link.User.Manager["baselayout"].userInfo(uid)
-        ctx.link.User.Manager["baselayout"].setUser(uid, info[1], info[3], info[4], unicode(password), info[5])
+        ctx.link.User.Manager["baselayout"].setUser(
+            uid, info[1], info[3], info[4], unicode(password), info[5])
         return True
     return False
+
 
 def setUserPassword():
     if yali.util.check_link() and yali.users.PENDING_USERS:
@@ -156,8 +194,10 @@ def setUserPassword():
         return True
     return False
 
+
 def setAdminPassword():
     return setPassword(uid=0, password=ctx.installData.rootPassword)
+
 
 def setKeymapLayout():
     ctx.logger.info("Setting keymap layout")
@@ -168,6 +208,7 @@ def setKeymapLayout():
         consolekeymap = consolekeymap[1]
     yali.util.writeKeymap(consolekeymap)
 
+
 def setupRepoIndex():
     target = os.path.join(ctx.consts.target_dir, "var/lib/pisi/index/%s" % ctx.consts.pisilinux_repo_name)
 
@@ -177,7 +218,7 @@ def setupRepoIndex():
         shutil.copy(ctx.consts.pisi_index_file_sum, target)
 
         # Extract the index
-        pureIndex = file(os.path.join(target,"pisi-index.xml"),"w")
+        pureIndex = open(os.path.join(target, "pisi-index.xml"), "w")
         if ctx.consts.pisi_index_file.endswith("bz2"):
             import bz2
             pureIndex.write(bz2.decompress(open(ctx.consts.pisi_index_file).read()))
@@ -193,6 +234,7 @@ def setupRepoIndex():
     ctx.logger.debug("Regenerating pisi caches.. ")
     yali.pisiiface.regenerateCaches()
     return True
+
 
 def writeInitramfsConf():
     conf_path = os.path.join(ctx.consts.target_dir, "etc/initramfs.conf")
@@ -220,19 +262,23 @@ def writeInitramfsConf():
         for parameter in parameters:
             try:
                 initramfs.write("%s\n" % parameter)
-            except IOError, msg:
+            except IOError as msg:
                 raise yali.Error("Unexpected error: %s" % msg)
+
 
 def setGrubResume():
     swapDevices = ctx.storage.storageset.swapDevices
 
     if not swapDevices:
-        ctx.logger.info("No swap devices. Skipping add resume parameter to /etc/default/grub.")
+        ctx.logger.info("No swap devices. \
+        Skipping add resume parameter to /etc/default/grub.")
         return
 
     grub_default_file = os.path.join(ctx.consts.target_dir, "etc/default/grub")
-    grub_default_file_new = os.path.join(ctx.consts.target_dir, "etc/default/grub.tmp")
-    grub_default_file_bak = os.path.join(ctx.consts.target_dir, "etc/default/grub.bak")
+    grub_default_file_new = os.path.join(
+        ctx.consts.target_dir, "etc/default/grub.tmp")
+    grub_default_file_bak = os.path.join(
+        ctx.consts.target_dir, "etc/default/grub.bak")
     if not os.path.exists(os.path.dirname(grub_default_file)):
         raise yali.Error("setGrubResume cannnot access %s path" % grub_default_file)
 
@@ -249,6 +295,7 @@ def setGrubResume():
     shutil.copy2(grub_default_file, grub_default_file_bak)
     shutil.copy2(grub_default_file_new, grub_default_file)
 
+
 def writeFstab():
     ctx.logger.info("Generating fstab configuration file")
     if ctx.storage.storageset.active:
@@ -257,6 +304,7 @@ def writeFstab():
 
     ctx.logger.debug("writeFstab:StorageSet not activated")
     return False
+
 
 def setupFirstBoot():
     ctx.logger.info("Generating yali configuration file")
@@ -267,11 +315,13 @@ def setupFirstBoot():
     ctx.logger.debug("setupFirstBoot:StorageSet not activated")
     return False
 
+
 def teardownFirstBoot():
     yali.util.run_batch("pisi", ["rm", "yali", "yali-theme-pisilinux", "yali-branding-pisilinux"])
 
+
 def setupPrivileges():
-    # BUG:#11255 normal user doesn't mount /mnt/archive directory. 
+    # BUG:#11255 normal user doesn't mount /mnt/archive directory.
     # We set new formatted partition priveleges as user=root group=disk and change mod as 0770
     ctx.logger.info("Setting user defined mountpoints privileges")
     if ctx.storage.storageset.active:
@@ -280,14 +330,16 @@ def setupPrivileges():
         if user_defined_mountpoints:
             ctx.logger.debug("User defined mountpoints:%s" % [device.format.mountpoint for device in user_defined_mountpoints])
             for device in user_defined_mountpoints:
-                yali.util.set_partition_privileges(device, 0770, 0, 6)
+                yali.util.set_partition_privileges(device, 0o770, 0, 6)
 
     ctx.logger.debug("setupPrivileges:StorageSet not activated")
     return False
 
+
 def setupStorage():
     ctx.storage.storageset.mountFilesystems()
     return ctx.storage.storageset.active
+
 
 def teardownStorage():
     remove = False
@@ -295,7 +347,9 @@ def teardownStorage():
         remove = True
     yali.util.backup_log(remove)
     ctx.storage.storageset.umountFilesystems()
+
     return not ctx.storage.storageset.active
+
 
 def writeBootLooder():
     ctx.logger.info("Generating grub configuration file")
@@ -306,9 +360,11 @@ def writeBootLooder():
     ctx.logger.debug("writeBootLooder:StorageSet not activated")
     return False
 
+
 def installBootloader():
-    #if len(ctx.mountCount):
-    #    ctx.logger.debug("StorageSet is already active. Bootloader installBootloader failed")
+    # if len(ctx.mountCount):
+    #    ctx.logger.debug("StorageSet is already active. \
+    # Bootloader installBootloader failed")
     #    return False
 
     rc = ctx.bootloader.install2()
@@ -318,5 +374,3 @@ def installBootloader():
     else:
         ctx.logger.info("Bootloader installation succesed")
         return True
-
-

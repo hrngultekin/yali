@@ -823,7 +823,9 @@ class Ext2Filesystem(Filesystem):
         argv = ["-p", self.device, "%dM" % (self.targetSize,)]
         return argv
 
+
 register_device_format(Ext2Filesystem)
+
 
 class Ext3Filesystem(Ext2Filesystem):
     """ ext3 filesystem. """
@@ -835,7 +837,9 @@ class Ext3Filesystem(Ext2Filesystem):
     _migrateOptions = ["-O", "extents"]
     partedSystem = fileSystemType["ext3"]
 
+
 register_device_format(Ext3Filesystem)
+
 
 class Ext4Filesystem(Ext3Filesystem):
     """ ext4 filesystem. """
@@ -845,7 +849,9 @@ class Ext4Filesystem(Ext3Filesystem):
     _formatOptions = ["-t", "ext4"]
     partedSystem = fileSystemType["ext4"]
 
+
 register_device_format(Ext4Filesystem)
+
 
 class FATFilesystem(Filesystem):
     """ FAT filesystem. """
@@ -872,7 +878,9 @@ class FATFilesystem(Filesystem):
     def _fsckErrorMessage(self, rc):
         return self._fsckErrors[rc]
 
+
 register_device_format(FATFilesystem)
+
 
 class EFIFilesystem(FATFilesystem):
     _type = "efi"
@@ -883,12 +891,13 @@ class EFIFilesystem(FATFilesystem):
     _minSize = 50
     _maxSize = 256
 
-
     @property
     def supported(self):
         return yali.util.isEfi() and self.utilsAvailable
 
+
 register_device_format(EFIFilesystem)
+
 
 class BTRFilesystem(Filesystem):
     """ btrfs filesystem """

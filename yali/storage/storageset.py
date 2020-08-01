@@ -7,7 +7,7 @@ import errno
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
+except Exception:
     _ = lambda x,y: y
 
 
@@ -26,20 +26,26 @@ from yali.storage.library import swap
 
 from pardus import fstabutils
 
+
 class StorageSetError(StorageError):
     pass
+
 
 class FSTabError(StorageSetError):
     pass
 
+
 class FSTabEntryError(StorageSetError):
     pass
+
 
 class BlkidTabError(StorageError):
     pass
 
+
 class CryptTabError(StorageError):
     pass
+
 
 def get_containing_device(path, devicetree):
     """ Return the device that a path resides on. """
@@ -63,8 +69,10 @@ def get_containing_device(path, devicetree):
 
     return devicetree.getDeviceByName(device_name)
 
+
 class BlkidTab(object):
     """ Dictionary-like interface to blkid.tab with device path keys """
+
     def __init__(self, chroot="/"):
         self.devices = {}
         self.path = os.path.join(chroot, "etc/blkid/blkid.tab")
@@ -89,7 +97,7 @@ class BlkidTab(object):
                     except ValueError:
                         continue
 
-                    self.devices[device][key] = value[1:-1] # strip off quotes
+                    self.devices[device][key] = value[1:-1]  # strip off quotes
 
     def __getitem__(self, key):
         return self.devices[key]
@@ -97,8 +105,10 @@ class BlkidTab(object):
     def get(self, key, default=None):
         return self.devices.get(key, default)
 
+
 class CryptTab(object):
     """ Dictionary-like interface to crypttab entries with map name keys """
+
     def __init__(self, devicetree, blkidTab=None, chroot=""):
         self.devicetree = devicetree
         self.blkidTab = blkidTab
@@ -179,8 +189,10 @@ class CryptTab(object):
     def get(self, key, default=None):
         return self.mappings.get(key, default)
 
+
 class StorageSet(object):
     _bootFSTypes = ["ext4", "ext3", "ext2"]
+
     def __init__(self, devicetree, rootpath):
         self.devicetree = devicetree
         self.rootpath = rootpath
@@ -201,13 +213,15 @@ class StorageSet(object):
     @property
     def dev(self):
         if not self._dev:
-            self._dev = DirectoryDevice("/dev", format=getFormat("bind",
-                                                                 device="/dev",
-                                                                 mountpoint="/dev",
-                                                                 exists=True),
-                                        exists=True)
+            self._dev = DirectoryDevice(
+                "/dev", format=getFormat("bind",
+                                         device="/dev",
+                                         mountpoint="/dev",
+                                         exists=True),
+                exists=True)
 
         return self._dev
+
     @property
     def sysfs(self):
         if not self._sysfs:
@@ -219,9 +233,10 @@ class StorageSet(object):
     @property
     def debugfs(self):
         if not self._debugfs:
-            self._debugfs = NoDevice(format=getFormat("debugfs",
-                                                     device="debugfs",
-                                                     mountpoint="/sys/kernel/debug"))
+            self._debugfs = NoDevice(
+                format=getFormat("debugfs",
+                                 device="debugfs",
+                                 mountpoint="/sys/kernel/debug"))
         return self._debugfs
 
     @property
@@ -297,28 +312,29 @@ class StorageSet(object):
 
                 if ctx.interface.messageWindow:
                     if msg.errno == errno.EEXIST:
-                        ctx.interface.messageWindow(_("General", "Invalid mount point"),
-                                                    _("General", "An error occurred when trying "
-                                                      "to create %s.  Some element of "
-                                                      "this path is not a directory. "
-                                                      "This is a fatal error and the "
-                                                      "install cannot continue.\n\n"
-                                                      "Press <Enter> to exit the "
-                                                      "installer.")
-                                                    % (device.format.mountpoint,),
-                                                    type="error")
+                        ctx.interface.messageWindow(
+                            _("General", "Invalid mount point"),
+                            _("General", "An error occurred when trying "
+                              "to create %s.  Some element of "
+                              "this path is not a directory. "
+                              "This is a fatal error and the "
+                              "install cannot continue.\n\n"
+                              "Press <Enter> to exit the "
+                              "installer.") % (device.format.mountpoint,),
+                            type="error")
                     else:
                         na = {'mountpoint': device.format.mountpoint,
                               'msg': msg.strerror}
-                        ctx.interface.messageWindow(_("General", "Invalid mount point"),
-                                                    _("General", "An error occurred when trying "
-                                                      "to create %(mountpoint)s: "
-                                                      "%(msg)s.  This is "
-                                                      "a fatal error and the install "
-                                                      "cannot continue.\n\n"
-                                                      "Press <Enter> to exit the "
-                                                      "installer.") % na,
-                                                    type="error")
+                        ctx.interface.messageWindow(
+                            _("General", "Invalid mount point"),
+                            _("General", "An error occurred when trying "
+                              "to create %(mountpoint)s: "
+                              "%(msg)s.  This is "
+                              "a fatal error and the install "
+                              "cannot continue.\n\n"
+                              "Press <Enter> to exit the "
+                              "installer.") % na,
+                            type="error")
                     sys.exit(2)
 
 
@@ -328,14 +344,17 @@ class StorageSet(object):
                 if ctx.interface.messageWindow and not device.format.linuxNative:
                     na = {'path': device.path,
                           'mountpoint': device.format.mountpoint}
-                    ret = ctx.interface.messageWindow(_("General", "Unable to mount filesystem"),
-                                                 _("General", "An error occurred mounting "
-                                                   "device %(path)s as "
-                                                   "%(mountpoint)s.  You may "
-                                                   "continue installation, but "
-                                                   "there may be problems.") % na,
-                                                   type="custom", customIcon="warning",
-                                                   customButtons=[_("General", "Exit installer"), _("General", "Continue")])
+                    ret = ctx.interface.messageWindow(
+                        _("General", "Unable to mount filesystem"),
+                        _("General", "An error occurred mounting "
+                          "device %(path)s as "
+                          "%(mountpoint)s.  You may "
+                          "continue installation, but "
+                          "there may be problems.") % na,
+                        type="custom", customIcon="warning",
+                        customButtons=[
+                            _("General", "Exit installer"),
+                            _("General", "Continue")])
 
                     if ret == 0:
                         sys.exit(2)
@@ -349,15 +368,16 @@ class StorageSet(object):
                     na = {'path': device.path,
                           'mountpoint': device.format.mountpoint,
                           'msg': msg}
-                    ctx.interface.messageWindow(_("General", "Unable to mount filesystem"),
-                                                _("General", "An error occurred mounting "
-                                                  "device %(path)s as %(mountpoint)s: "
-                                                  "%(msg)s. This is "
-                                                  "a fatal error and the install "
-                                                  "cannot continue.\n\n"
-                                                  "Press <Enter> to exit the "
-                                                  "installer.") % na,
-                                                type="error")
+                    ctx.interface.messageWindow(
+                        _("General", "Unable to mount filesystem"),
+                        _("General", "An error occurred mounting "
+                          "device %(path)s as %(mountpoint)s: "
+                          "%(msg)s. This is "
+                          "a fatal error and the install "
+                          "cannot continue.\n\n"
+                          "Press <Enter> to exit the "
+                          "installer.") % na,
+                        type="error")
                     sys.exit(2)
 
         self.active = True
@@ -382,13 +402,14 @@ class StorageSet(object):
             if not ctx.interface.messageWindow:
                 sys.exit(2)
 
-            ret = ctx.interface.messageWindow(_("General", "Error"),
-                                              msg,
-                                              type="custom",
-                                              customButtons=[_("General", "Skip"),
-                                                             _("General", "Format"),
-                                                             _("General", "Exit")],
-                                              customIcon="error")
+            ret = ctx.interface.messageWindow(
+                _("General", "Error"),
+                msg,
+                type="custom",
+                customButtons=[_("General", "Skip"),
+                               _("General", "Format"),
+                               _("General", "Exit")],
+                customIcon="error")
 
             if ret == 0:
                 self.devicetree._removeDevice(device)
@@ -429,13 +450,13 @@ class StorageSet(object):
 
                 except swap.SuspendError:
                     msg = _("General", "The swap device:\n\n     %s\n\n"
-                                "in your /etc/fstab file is currently in "
-                                "use as a software suspend device, "
-                                "which means your system is hibernating. "
-                                "If you are performing a new install, "
-                                "make sure the installer is set "
-                                "to format all swap devices.") \
-                              % device.path
+                            "in your /etc/fstab file is currently in "
+                            "use as a software suspend device, "
+                            "which means your system is hibernating. "
+                            "If you are performing a new install, "
+                            "make sure the installer is set "
+                            "to format all swap devices.") \
+                          % device.path
 
                     if swapError(msg, device):
                         continue
@@ -474,7 +495,7 @@ class StorageSet(object):
         count = 0
         basedir = os.path.normpath("%s/%s" % (rootPath, device.format.mountpoint))
         while os.path.exists("%s/%s" % (basedir, filename)) or \
-              self.devicetree.getDeviceByName(filename):
+                self.devicetree.getDeviceByName(filename):
             file = os.path.normpath("%s/%s" % (basedir, filename))
             count += 1
             filename = "/SWAP-%d" % count

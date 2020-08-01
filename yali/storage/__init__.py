@@ -13,8 +13,10 @@ import yali.util
 import yali.context as ctx
 from yali.baseudev import udev_trigger
 
+
 class StorageError(yali.Error):
     pass
+
 
 from yali.storage.library import lvm
 from yali.storage.devices.device import Device, DeviceError
@@ -26,6 +28,9 @@ from yali.storage.formats import FormatError, getFormat, get_default_filesystem_
 from yali.storage.devicetree import DeviceTree, DeviceTreeError
 from yali.storage.storageset import StorageSet, FSTabError
 from yali.storage.operations import OperationCreateDevice, OperationCreateFormat, OperationDestroyFormat, OperationDestroyDevice, OperationDestroyFormat, OperationCreateFormat
+
+
+
 
 
 def initialize(storage, intf):
@@ -382,7 +387,7 @@ class Storage(object):
     @property
     def devices(self):
         """A list of all devices in the device tree."""
-        devices =  self.devicetree.devices
+        devices = self.devicetree.devices
         devices.sort(key=lambda d: d.name)
         return devices
 
@@ -525,7 +530,6 @@ class Storage(object):
         arrays = self.devicetree.getDevicesByType("mdcontainer")
         arrays.sort(key=lambda d: d.name)
         return arrays
-
 
     @property
     def raidArrays(self):
@@ -887,7 +891,6 @@ class Storage(object):
                 warnings.append(_("General", "Your %(mount)s partition is less than %(size)s megabytes which is "
                                   "lower than recommended for a normal %(productName)s install.")
                                 % {'mount': mount, 'size': size, 'productName': yali.util.product_name()})
-
 
         errors.extend(self.storageset.checkBootRequest(boot))
 

@@ -194,7 +194,7 @@ class Widget(QWidget, ScreenWidget):
             return False
 
         if ctx.flags.install_type == ctx.STEP_BASE or ctx.flags.install_type == ctx.STEP_DEFAULT:
-            self.createPackageList()
+            # self.createPackageList()
 
             rc = ctx.interface.messageWindow(_("General", "Confirm"),
                                         _("General", "The partitioning options you have selected "

@@ -4,8 +4,8 @@ import copy
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
-    _ = lambda x,y: y
+except Exception:
+    _ = lambda x, y: y
 
 from PyQt5.QtWidgets import QWidget, QTreeWidgetItem
 from PyQt5.QtCore import pyqtSignal, QObject, QSize
@@ -22,6 +22,7 @@ from yali.storage.devices.device import Device
 from yali.storage.devices.volumegroup import VolumeGroup
 from yali.storage.devices.logicalvolume import LogicalVolume
 from yali.storage.storageBackendHelpers import queryNoFormatPreExisting, sanityCheckMountPoint, sanityCheckVolumeGroupName, sanityCheckLogicalVolumeName
+
 
 class LVMEditor(object):
     def __init__(self, parent, request, isNew=False):
@@ -49,14 +50,15 @@ class LVMEditor(object):
         self.availlvmparts = self.storage.unusedPVS(vg=request)
         # if no PV exist, raise an error message and return
         if len(self.availlvmparts) < 1:
-            self.intf.messageWindow(_("General", "Not enough physical volumes"),
-                                    _("General", "At least one unused physical "
-                                      "volume partition is "
-                                      "needed to\ncreate an LVM Volume Group.\n"
-                                      "Create a partition or RAID array "
-                                      "of type \"physical volume\n(LVM)\" and then "
-                                      "select the \"LVM\" option again."),
-                                    type="warning")
+            self.intf.messageWindow(
+                _("General", "Not enough physical volumes"),
+                _("General", "At least one unused physical "
+                  "volume partition is "
+                  "needed to\ncreate an LVM Volume Group.\n"
+                  "Create a partition or RAID array "
+                  "of type \"physical volume\n(LVM)\" and then "
+                  "select the \"LVM\" option again."),
+                type="warning")
             self.dialog = None
             return
 
@@ -88,7 +90,7 @@ class LVMEditor(object):
 
             widget = self.dialog.content
 
-            name =  str(widget.name.text())
+            name = str(widget.name.text())
             pvs = widget.selectedPhysicalVolumes
             msg = sanityCheckVolumeGroupName(name)
             if msg:
@@ -106,7 +108,7 @@ class LVMEditor(object):
                     continue
 
             peSize = int(widget.physicalExtends.itemData(widget.physicalExtends.currentIndex())) / 1024.0
-            
+
             origlvs = self.origrequest.lvs
             if not self.origrequest.exists:
                 ctx.logger.debug("non-existing vg -- setting up lvs, pvs, name, peSize")
@@ -357,7 +359,7 @@ class VolumeGroupWidget(QWidget, Ui_VolumeGroupWidget):
         """ handle changes in the Physical Extent Option Menu """
 
         def getPhysicalVolumeWastedRatio(physicalextend):
-            """ Given a new physicalExtend value, return percentage of smallest 
+            """ Given a new physicalExtend value, return percentage of smallest
                 Physical Volume wasted
 
                 new - (int) new value of PE, in KB
@@ -916,5 +918,3 @@ class LogicalVolumeItem(QTreeWidgetItem):
     @property
     def device(self):
         return self._device
-
-

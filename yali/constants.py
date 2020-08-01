@@ -16,6 +16,7 @@
 import os
 import locale
 
+
 class Singleton(type):
     def __init__(cls, name, bases, dict):
         super(Singleton, cls).__init__(name, bases, dict)
@@ -44,6 +45,7 @@ class _constant:
             raise self.ConstError, "Can't unbind constant: %s" % name
         # we don't have an attribute by this name
         raise NameError, name
+
 
 class Constants:
     """ YALI's Constants """
@@ -79,12 +81,14 @@ class Constants:
         self.__c.cd_repo_name = "pisilinux-cd"
         self.__c.collection_repo_name = "pisilinux-collection"
         self.__c.cd_repo_uri = os.path.join(self.__c.source_dir, "repo/pisi-index.xml.bz2")
-        self.__c.pisilinux_repo_name = "@REPO_NAME@"
-        self.__c.pisilinux_repo_uri = "@REPO_URI@"
+        # yali.conf dosyasından alınacak
+        # self.__c.pisilinux_repo_name = "@REPO_NAME@"
+        # self.__c.pisilinux_repo_uri = "@REPO_URI@"
         self.__c.pisi_index_file = os.path.join(self.__c.data_dir,"data/pisi-index.xml.bz2")
         self.__c.pisi_index_file_sum = os.path.join(self.__c.data_dir,"data/pisi-index.xml.bz2.sha1sum")
         self.__c.lang_path = os.path.join(self.__c.data_dir, "lang")
-        #self.__c.lang = locale.getdefaultlocale()[0][:2]
+        self.__c.sqfs_file = os.path.join(self.__c.source_dir, "pisi/pisi.sqfs")
+        # self.__c.lang = locale.getdefaultlocale()[0][:2]
 
     def __getattr__(self, attr):
         return getattr(self.__c, attr)

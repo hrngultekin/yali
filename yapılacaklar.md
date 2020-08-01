@@ -5,3 +5,5 @@
  - [x] canlı kurulum için diyalog başlık çubuğunu kaldır
  - [ ] diyalog pecereleri harici başlığı için ayar eklenecek (canlı iso için harici başlık olmasın kurulum isosu için harici başlık olsun)
  - [x] ekran güncellemeleri ayarlandı (yerelleştire, ülke seçimi ...)
+ - [x] paket kurulumu yerine sqfs kurulumu ayarlandı
+    (kurulum sonundayalı kaldırılmalı)

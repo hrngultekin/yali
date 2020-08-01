@@ -27,6 +27,7 @@ import yali.util
 from yali.baseudev import *
 import yali.context as ctx
 
+
 def udev_resolve_devspec(devspec):
     if not devspec:
         return None
@@ -59,6 +60,7 @@ def udev_resolve_devspec(devspec):
     if ret:
         return udev_device_get_name(ret)
 
+
 def udev_resolve_glob(glob):
     import fnmatch
     ret = []
@@ -77,6 +79,7 @@ def udev_resolve_glob(glob):
                     ret.append(name)
 
     return ret
+
 
 def udev_get_block_devices():
     # Wait for scsi adapters to be done with scanning their busses (#583143)
@@ -100,6 +103,7 @@ def udev_get_block_devices():
             entries.append(entry)
     return entries
 
+
 def __is_blacklisted_blockdev(dev_name):
     """Is this a blockdev we never want for an install?"""
     if dev_name.startswith("loop") or dev_name.startswith("ram") or dev_name.startswith("fd"):
@@ -114,11 +118,13 @@ def __is_blacklisted_blockdev(dev_name):
 
     return False
 
+
 def udev_enumerate_block_devices():
     import os.path
 
     return filter(lambda d: not __is_blacklisted_blockdev(os.path.basename(d)),
                   udev_enumerate_devices(deviceClass="block"))
+
 
 def udev_get_block_device(sysfs_path):
     dev = udev_get_device(sysfs_path)
@@ -134,9 +140,11 @@ def udev_device_get_name(udev_info):
     """ Return the best name for a device based on the udev db data. """
     return udev_info.get("DM_NAME", udev_info["name"])
 
+
 def udev_device_get_format(udev_info):
     """ Return a device's format type as reported by udev. """
     return udev_info.get("ID_FS_TYPE")
+
 
 def udev_device_get_uuid(udev_info):
     """ Get the UUID from the device's format as reported by udev. """
@@ -147,13 +155,16 @@ def udev_device_get_uuid(udev_info):
             re.sub(r'\W', '', md_uuid) != re.sub(r'\W', '', uuid):
         return udev_info.get("ID_FS_UUID")
 
+
 def udev_device_get_label(udev_info):
     """ Get the label from the device's format as reported by udev. """
     return udev_info.get("ID_FS_LABEL")
 
+
 def udev_device_is_dm(info):
     """ Return True if the device is a device-mapper device. """
     return info.has_key("DM_NAME")
+
 
 def udev_device_is_md(info):
     """ Return True if the device is a mdraid array device. """
@@ -164,9 +175,11 @@ def udev_device_is_md(info):
     return info.has_key("MD_METADATA") and \
            info.get("ID_FS_TYPE") != "isw_raid_member"
 
+
 def udev_device_is_cciss(info):
     """ Return True if the device is a CCISS device. """
     return udev_device_get_name(info).startswith("cciss")
+
 
 def udev_device_is_dasd(info):
     """ Return True if the device is a dasd device. """
@@ -175,6 +188,7 @@ def udev_device_is_dasd(info):
         return devname.startswith("dasd")
     else:
         return False
+
 
 def udev_device_is_zfcp(info):
     """ Return True if the device is a zfcp device. """

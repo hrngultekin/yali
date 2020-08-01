@@ -7,18 +7,21 @@ import parted
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
-    _ = lambda x,y: y
+except Exception:
+    _ = lambda x, y: y
 
 import yali.util
 import yali.context as ctx
 from pardus import grubutils
 
+
 class BootLoaderError(yali.Error):
     pass
 
+
 class ReleaseError(BootLoaderError):
     pass
+
 
 class KernelError(BootLoaderError):
     pass
@@ -26,7 +29,7 @@ class KernelError(BootLoaderError):
 
 dos_filesystems = ('FAT', 'fat16', 'fat32', 'ntfs', 'hpfs')
 linux_filesystems = ('ext4', 'ext3', 'reisersfs', 'xfs')
-allParameters = ["root", "initrd", "init", "xorg", "yali", "BOOT_IMAGE", \
+allParameters = ["root", "initrd", "init", "xorg", "yali", "BOOT_IMAGE",
                  "lang", "mudur", "copytoram"]
 
 BOOT_TYPE_NONE = 0
@@ -34,26 +37,30 @@ BOOT_TYPE_MBR = 1
 BOOT_TYPE_PARTITION = 2
 BOOT_TYPE_RAID = 4
 
-boot_type_strings = {BOOT_TYPE_PARTITION: "None",
-                     BOOT_TYPE_MBR: "Master Boot Record(MBR)",
-                     BOOT_TYPE_PARTITION: "First sector of Pardus Boot partition",
-                     BOOT_TYPE_RAID: "RAID Device"}
+# 1. ve 3. anahtarlar neden aynı?
+boot_type_strings = {
+    BOOT_TYPE_PARTITION: "None",
+    BOOT_TYPE_MBR: "Master Boot Record(MBR)",
+    BOOT_TYPE_PARTITION: "First sector of Pardus Boot partition",
+    BOOT_TYPE_RAID: "RAID Device"}
+
 
 def get_configs(rootpath):
     try:
         releasePath = os.path.join(rootpath, "etc/pisilinux-release")
-        release = file(releasePath).readlines()[0].strip()
+        release = open(releasePath).readlines()[0].strip()
         bootDir = os.path.join(rootpath, "boot")
         kernels = glob.glob(bootDir + "/kernel-*")
         kernel = os.path.basename(sorted(kernels)[-1])
         kernelVersion = kernel[len("kernel-"):]
         initramfs = "initramfs-%s" % kernelVersion
-    except IOError, msg:
-        raise ReleaseError, msg
-    except IndexError, msg:
-        raise KernelError, msg
+    except IOError as msg:
+        raise ReleaseError(msg)
+    except IndexError as msg:
+        raise KernelError(msg)
     else:
         return (release, kernel, initramfs)
+
 
 def get_commands(rootDevice, swapDevice=None):
     def is_required(parameter):
@@ -73,9 +80,11 @@ def get_commands(rootDevice, swapDevice=None):
             _commands.append(parameter)
 
     if ctx.blacklistedKernelModules:
-        _commands.append("blacklist=%s" % ",".join(ctx.blacklistedKernelModules))
+        _commands.append(
+            "blacklist=%s" % ",".join(ctx.blacklistedKernelModules))
 
     return " ".join(_commands).strip()
+
 
 grub_conf = """\
 default 0
@@ -107,12 +116,14 @@ chainloader +1
 
 """
 
+
 def get_physical_devices(storage, device):
     _devices = []
     _physicalDevices = []
     if device.type == "mdarray":
         if device.level != 1:
-            ctx.logger.error("Ignoring non level 1 raid array %s" % device.name)
+            ctx.logger.error(
+                "Ignoring non level 1 raid array %s" % device.name)
             return _devices
         _devices = device.parents
     else:
@@ -130,6 +141,7 @@ def get_physical_devices(storage, device):
 class BootLoader(object):
     _conf = "boot/grub/grub.conf"
     _deviceMap = "device.map"
+
     def __init__(self, storage=None):
         self.storage = storage
         self.path = "/boot/"
@@ -145,7 +157,8 @@ class BootLoader(object):
         self._stage1Device = device
 
         if device:
-            partition = yali.util.get_disk_partition(self.storage.devicetree.getDeviceByName(device))[1]
+            partition = yali.util.get_disk_partition(
+                self.storage.devicetree.getDeviceByName(device))[1]
             if partition is None:
                 self._type = BOOT_TYPE_MBR
             else:
@@ -155,7 +168,7 @@ class BootLoader(object):
         return self._stage1Device
 
     stage1Device = property(lambda f: f._getStage1Device(),
-                            lambda f,d: f._setStage1Device(d))
+                            lambda f, d: f._setStage1Device(d))
 
     def _setStage2Device(self, device):
         self._stage2Device = device
@@ -167,7 +180,7 @@ class BootLoader(object):
         return self._stage2Device
 
     stage2Device = property(lambda f: f._getStage2Device(),
-                            lambda f,d: f._setStage2Device(d))
+                            lambda f, d: f._setStage2Device(d))
 
     def _setRootDevice(self, device):
         self._rootDevice = device
@@ -179,7 +192,8 @@ class BootLoader(object):
         return self._rootDevice
 
     rootDevice = property(lambda f: f._getRootDevice(),
-                          lambda f,d: f._setRootDevice(d))
+                          lambda f, d: f._setRootDevice(d))
+
     def _setSwapDevice(self, device):
         self._swapDevice = device
 
@@ -190,7 +204,7 @@ class BootLoader(object):
         return self._swapDevice
 
     swapDevice = property(lambda f: f._getSwapDevice(),
-                          lambda f,d: f._setSwapDevice(d))
+                          lambda f, d: f._setSwapDevice(d))
 
     def _setBootType(self, type):
         self._type = type
@@ -199,7 +213,7 @@ class BootLoader(object):
         return self._type
 
     bootType = property(lambda f: f._getBootType(),
-                       lambda f,d: f._setBootType(d))
+                        lambda f, d: f._setBootType(d))
 
     @property
     def choices(self):
@@ -209,11 +223,19 @@ class BootLoader(object):
             return _choices
 
         if self.stage2Device.type == "mdarray":
-            _choices[BOOT_TYPE_RAID] = (self.stage2Device.name, _("General", "%s" % boot_type_strings[BOOT_TYPE_RAID]))
-            _choices[BOOT_TYPE_MBR] = (self.drives[0], _("General", "%s" % boot_type_strings[BOOT_TYPE_MBR]))
+            _choices[BOOT_TYPE_RAID] = (
+                self.stage2Device.name,
+                _("General", "%s" % boot_type_strings[BOOT_TYPE_RAID]))
+            _choices[BOOT_TYPE_MBR] = (
+                self.drives[0],
+                _("General", "%s" % boot_type_strings[BOOT_TYPE_MBR]))
         else:
-            _choices[BOOT_TYPE_PARTITION] = (self.stage2Device.name, _("General", "%s" % boot_type_strings[BOOT_TYPE_PARTITION]))
-            _choices[BOOT_TYPE_MBR] = (self.drives[0], _("General", "%s" % boot_type_strings[BOOT_TYPE_MBR]))
+            _choices[BOOT_TYPE_PARTITION] = (
+                self.stage2Device.name,
+                _("General", "%s" % boot_type_strings[BOOT_TYPE_PARTITION]))
+            _choices[BOOT_TYPE_MBR] = (
+                self.drives[0],
+                _("General", "%s" % boot_type_strings[BOOT_TYPE_MBR]))
 
         return _choices
 
@@ -229,8 +251,11 @@ class BootLoader(object):
         self.writeGrubConf()
 
         usedDevices = set()
-        usedDevices.update(get_physical_devices(self.storage, self.storage.devicetree.getDeviceByName(self.stage1Device)))
-        usedDevices.update(get_physical_devices(self.storage, self.stage2Device))
+        usedDevices.update(get_physical_devices(
+            self.storage,
+            self.storage.devicetree.getDeviceByName(self.stage1Device)))
+        usedDevices.update(get_physical_devices(
+            self.storage, self.stage2Device))
 
         self.writeDeviceMap(usedDevices)
 
@@ -238,24 +263,31 @@ class BootLoader(object):
         bootDevices = get_physical_devices(self.storage, self.stage2Device)
         rootDevice = self.rootDevice
         swapDevice = self.swapDevice
-        (release, kernel, initramfs ) = get_configs(ctx.consts.target_dir)
-        s = grub_conf % {"uuid": bootDevices[0].fstabSpec.split("=")[1].lower(),
-                         "bootpath" : self.path,
-                         "release": release,
-                         "kernel": kernel,
-                         "commands": get_commands(rootDevice, swapDevice),
-                         "initramfs": initramfs}
-        ctx.logger.debug("uuid:%s -  bootpath:%s - release:%s - kernel:%s -commands:%s - initramfs:%s" %
-                        (bootDevices[0].fstabSpec.split("=")[1].lower(), self.path, release, kernel,
-                         get_commands(rootDevice, swapDevice), initramfs))
-        ctx.logger.debug("conf:%s" % os.path.join(ctx.consts.target_dir, self._conf))
+        (release, kernel, initramfs) = get_configs(ctx.consts.target_dir)
+        s = grub_conf % {
+            "uuid": bootDevices[0].fstabSpec.split("=")[1].lower(),
+            "bootpath": self.path,
+            "release": release,
+            "kernel": kernel,
+            "commands": get_commands(rootDevice, swapDevice),
+            "initramfs": initramfs}
+        ctx.logger.debug(
+            "uuid:%s -  bootpath:%s - release:%s - kernel:%s \
+            -commands:%s - initramfs:%s" %
+            (bootDevices[0].fstabSpec.split("=")[1].lower(), self.path,
+             release, kernel,
+             get_commands(rootDevice, swapDevice), initramfs))
+        ctx.logger.debug(
+            "conf:%s" % os.path.join(ctx.consts.target_dir, self._conf))
         with open(os.path.join(ctx.consts.target_dir, self._conf), "w") as grubConfFile:
             grubConfFile.write(s)
 
         target_conf_dir = os.path.join(ctx.consts.target_dir, "etc")
         if os.path.exists(target_conf_dir):
             ctx.logger.debug("Target grub.conf file is writing")
-            self.writeGrubInstallConf(os.path.join(target_conf_dir, "grub.conf"), removableExists=False)
+            self.writeGrubInstallConf(
+                os.path.join(target_conf_dir, "grub.conf"),
+                removableExists=False)
 
         yali.util.cp(os.path.join(target_conf_dir, "grub.conf"), "/tmp/batch")
         ctx.logger.debug("Target grub.conf file is copying to use with grub")
@@ -267,7 +299,7 @@ class BootLoader(object):
                 continue
 
             if not partition.getFlag(parted.PARTITION_DIAG):
-                if partition.format.type in  ('fat32', 'ntfs-3g') and \
+                if partition.format.type in ('fat32', 'ntfs-3g') and \
                         yali.util.check_dual_boot():
                     if partition.format.type == "fat32":
                         self.appendDOSSystems(partition.path, "vfat")
@@ -275,13 +307,17 @@ class BootLoader(object):
                         self.appendDOSSystems(partition.path, "ntfs")
 
                 elif partition.format.type in ('ext4', 'ext3', 'reisersfs', 'xfs'):
-                    bootDevice = get_physical_devices(self.storage, self.stage2Device)[0]
+                    bootDevice = get_physical_devices(
+                        self.storage, self.stage2Device)[0]
                     if partition.path != bootDevice.path:
-                        self.appendLinuxSystems(partition.path, partition.format.type)
+                        self.appendLinuxSystems(
+                            partition.path, partition.format.type)
 
     def appendDOSSystems(self, device, formatType):
         if not os.path.isdir(ctx.consts.tmp_mnt_dir):
-            ctx.logger.debug("Creating temporary mount point %s for %s to check partitions" % (ctx.consts.tmp_mnt_dir, device))
+            ctx.logger.debug(
+                "Creating temporary mount point %s for %s to check partitions"
+                % (ctx.consts.tmp_mnt_dir, device))
             os.makedirs(ctx.consts.tmp_mnt_dir)
         else:
             yali.util.umount(ctx.consts.tmp_mnt_dir)
@@ -351,9 +387,9 @@ setup %s
 quit
 """ % (bootPartitionPath, stage1Path)
 
-        ctx.logger.debug("Writing Batch template to %s:\n%s" % (path, batch_template))
-        file(path,'w').write(batch_template)
-
+        ctx.logger.debug(
+            "Writing Batch template to %s:\n%s" % (path, batch_template))
+        open(path, 'w').write(batch_template)
 
     def install(self, batch=False):
         if batch:
@@ -362,23 +398,75 @@ quit
             return self.install_devicemap()
 
     def install_batch(self):
-        rc = yali.util.run_batch("grub", ["--no-floppy", "--batch < ", "/tmp/batch"])[0]
+        rc = yali.util.run_batch(
+            "grub", ["--no-floppy", "--batch < ", "/tmp/batch"])[0]
         yali.util.sync()
         return rc
 
     def install_devicemap(self):
-        rc = yali.util.run_batch("grub", ["--no-floppy", "--device-map=/tmp/device.map", "--batch < ", "/tmp/batch"])[0]
+        rc = yali.util.run_batch(
+            "grub", ["--no-floppy", "--device-map=/tmp/device.map",
+                     "--batch < ", "/tmp/batch"])[0]
         yali.util.sync()
         return rc
 
     def install2(self):
-        stage1Devices = get_physical_devices(self.storage, self.storage.devicetree.getDeviceByName(self.stage1Device))
+        stage1Devices = get_physical_devices(
+            self.storage,
+            self.storage.devicetree.getDeviceByName(self.stage1Device))
 
         if yali.util.isEfi():
             efiDev = self.storage.storageset.bootDevice
             yali.util.chroot("mkdir /boot/efi")
             yali.util.chroot("mount %s /boot/efi" % efiDev.path)
-            yali.util.chroot("grub2-install --recheck --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=pisilinux %s" % stage1Devices[0].path)
+            yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
+                --efi-directory=/boot/efi --bootloader-id=pisilinux \
+                %s" % stage1Devices[0].path)
+
+            # efi boot sıralaması için dosyayı oku pisilinux u ilk sıraya al
+            set_pisi_boot_order_first()
             yali.util.chroot("umount /boot/efi")
         else:
-            yali.util.chroot("grub2-install --recheck %s" % stage1Devices[0].path)
+            yali.util.chroot(
+                "grub2-install --recheck %s" % stage1Devices[0].path)
+        # kver = path.split("/")[2]
+        # subprocess.call(["/usr/bin/mkinitcpio","-k","%s"% kver ,"-g","/boot/initramfs-%s-fallback.img"% kver,"-S","autodetect"])
+        # subprocess.call(["/usr/bin/mkinitcpio","-k","%s"% kver ,"-c","/etc/mkinitcpio.conf","-g","/boot/initramfs-%s.img"% kver])
+        # kver = platform.release()
+        kver = os.uname()[2]
+        yali.util.chroot("/usr/bin/mkinitcpio -k {0} \
+            -g /boot/initramfs-{0}-fallback.img -S autodetect".format(kver))
+        yali.util.chroot("/usr/bin/mkinitcpio -k {0}\
+            -c /etc/mkinitcpio.conf -g /boot/initramfs-{0}.img".format(kver))
+        yali.postinstall.writeBootLooder()
+
+
+def set_pisi_boot_order_first():
+    import subprocess
+    import re
+    proc = subprocess.Popen(
+        "efibootmgr", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    if stdout == "":
+        print("efibootmgr output dont read")
+        return
+
+    boot_order = re.search("BootOrder: (.*)", stdout).groups()[0].split(",")
+
+    boot_list = re.findall("Boot([0-9]{4})\* (.*)", stdout)
+
+    pisi_order = ""
+    for k, v in boot_list:
+        if v == "pisilinux":
+            pisi_order = k
+            break
+
+    reorder_list = list(boot_order)
+    reorder_list.remove(pisi_order)
+    reorder_list = [pisi_order] + reorder_list
+
+    if pisi_order != boot_order[0]:
+        cmd = ["efibootmgr", "-o", ",".join(reorder_list)]
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc.communicate()

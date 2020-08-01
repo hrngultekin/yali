@@ -19,19 +19,23 @@ from distutils.cmd import Command
 from distutils.command.build import build
 from distutils.command.clean import clean
 from distutils.command.install import install
-from distutils.spawn import find_executable, spawn
+from distutils.spawn import find_executable  # , spawn
 
 I18N_DOMAIN = "yali"
-I18N_LANGUAGES = ["tr", "en", "nl", "it", "fr", "de", "pt_BR", "es", "pl", "ca", "sv", "hu", "ru", "hr"]
+I18N_LANGUAGES = ["tr", "en", "nl", "it", "fr", "de", "pt_BR", "es",
+                  "pl", "ca", "sv", "hu", "ru", "hr"]
+
 
 # WARNING: update_messages and release_messages run with python3
 def update_messages():
-    files = glob.glob("build/lib.linux-x86_64-2.7/yali/**/*.py", recursive=True)
+    files = glob.glob("build/lib.linux-x86_64-2.7/yali/**/*.py",
+                      recursive=True)
     # print(files)
 
-    for l in I18N_LANGUAGES:
-        print(l)
-        os.system("pylupdate5 -translate-function _ {files} -ts lang/{lang}.ts".format(files=" ".join(files), lang=l))
+    for lng in I18N_LANGUAGES:
+        print(lng)
+        os.system("pylupdate5 -translate-function _ {files} -ts lang/{lang}.ts\
+            ".format(files=" ".join(files), lang=lng))
 
 
 def release_messages():
@@ -41,13 +45,14 @@ def release_messages():
     os.system("lrelease {}".format(ts_files))
 
 
-
 def qt_ui_files():
     ui_files = "yali/gui/Ui/*.ui"
     return glob.glob(ui_files)
 
+
 def py_file_name(ui_file):
     return os.path.splitext(ui_file)[0] + '.py'
+
 
 class YaliBuild(build):
     def changeQRCPath(self, ui_file):
@@ -61,13 +66,14 @@ class YaliBuild(build):
 
     def compileUI(self, ui_file):
         pyqt_configuration = sipconfig.Configuration()
-        pyuic_exe = find_executable('py2uic5', pyqt_configuration.default_bin_dir)
+        pyuic_exe = find_executable(
+            'py2uic5', pyqt_configuration.default_bin_dir)
         if not pyuic_exe:
             pyuic_exe = find_executable('py2uic5')
 
         cmd = [pyuic_exe, ui_file, '-o']
         cmd.append(py_file_name(ui_file))
-        #cmd.append("-g \"yali\"")
+        # cmd.append("-g \"yali\"")
         os.system(' '.join(cmd))
 
     def run(self):
@@ -77,6 +83,7 @@ class YaliBuild(build):
             self.compileUI(ui_file)
             self.changeQRCPath(ui_file)
         build.run(self)
+
 
 class YaliClean(clean):
 
@@ -91,8 +98,9 @@ class YaliClean(clean):
         if os.path.exists("build"):
             shutil.rmtree("build")
 
+
 class YaliUninstall(Command):
-    user_options = [ ]
+    user_options = []
 
     def initialize_options(self):
         pass
@@ -112,7 +120,7 @@ class YaliUninstall(Command):
             shutil.rmtree(conf_dir)
 
         if os.path.exists("/usr/share/applications/yali.desktop"):
-            print ("removing: rest of installation")
+            print("removing: rest of installation")
             os.unlink("/usr/share/applications/yali.desktop")
         os.unlink("/usr/bin/yali-bin")
         os.unlink("/usr/bin/start-yali")
@@ -129,12 +137,15 @@ class I18nInstall(install):
             os.popen("msgfmt po/%s.po -o po/%s.mo" % (lang, lang))
             if not self.root:
                 self.root = "/"
-            destpath = os.path.join(self.root, "usr/share/locale/%s/LC_MESSAGES" % lang)
+            destpath = os.path.join(
+                self.root, "usr/share/locale/%s/LC_MESSAGES" % lang)
             try:
                 os.makedirs(destpath)
-            except:
+            except Exception:
                 pass
-            shutil.copy("po/%s.mo" % lang, os.path.join(destpath, "%s.mo" % I18N_DOMAIN))
+            shutil.copy("po/%s.mo" % lang,
+                        os.path.join(destpath, "%s.mo" % I18N_DOMAIN))
+
 
 if "update_messages" in sys.argv:
     update_messages()
@@ -143,29 +154,31 @@ elif "release_messages" in sys.argv:
     release_messages()
     sys.exit(0)
 
-setup(name="yali",
-      version= "3.0.2",
-      description="YALI (Yet Another Linux Installer)",
-      long_description="Pisi Linux System Installer.",
-      license="Latest GNU GPL version",
-      author="Pisi Linux Developers",
-      author_email="admins@pisilinux.org",
-      url="https://github.com/pisilinux/project",
-      packages = ['yali', 'yali.gui', 'yali.gui.Ui', 'yali.storage',\
-                  'yali.storage.devices', 'yali.storage.formats', 'yali.storage.library'],
-      data_files = [('/etc/yali', glob.glob("conf/*")),
-                    ('/lib/udev/rules.d', ["70-yali.rules"]),
-                    ('/usr/share/applications', ["yali.desktop"]),
-                    ('/usr/share/yali/lang', glob.glob("lang/*.qm"))],
-      scripts = ['yali-bin', 'start-yali', 'bindYali'],
-      ext_modules = [Extension('yali._sysutils',
-                               sources = ['yali/_sysutils.c'],
-                               libraries = ["ext2fs"],
-                               extra_compile_args = ['-Wall'])],
-      cmdclass = {
-        'build' : YaliBuild,
-        'clean' : YaliClean,
+setup(
+    name="yali",
+    version="3.0.2",
+    description="YALI (Yet Another Linux Installer)",
+    long_description="Pisi Linux System Installer.",
+    license="Latest GNU GPL version",
+    author="Pisi Linux Developers",
+    author_email="admins@pisilinux.org",
+    url="https://github.com/pisilinux/project",
+    packages=['yali', 'yali.gui', 'yali.gui.Ui', 'yali.storage',
+              'yali.storage.devices', 'yali.storage.formats',
+              'yali.storage.library'],
+    data_files=[('/etc/yali', glob.glob("conf/*")),
+                ('/lib/udev/rules.d', ["70-yali.rules"]),
+                ('/usr/share/applications', ["yali.desktop"]),
+                ('/usr/share/yali/lang', glob.glob("lang/*.qm"))],
+    scripts=['yali-bin', 'start-yali', 'bindYali'],
+    ext_modules=[Extension('yali._sysutils',
+                           sources=['yali/_sysutils.c'],
+                           libraries=["ext2fs"],
+                           extra_compile_args=['-Wall'])],
+    cmdclass={
+        'build': YaliBuild,
+        'clean': YaliClean,
         'install': I18nInstall,
         'uninstall': YaliUninstall
-        }
-    )
+    }
+)

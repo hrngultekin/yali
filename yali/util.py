@@ -24,7 +24,7 @@ import ConfigParser
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
+except Exception:
     _ = lambda x,y: y
 
 import comar
@@ -36,7 +36,8 @@ import yali.localedata
 import yali.context as ctx
 from pardus import diskutils, grubutils
 
-EARLY_SWAP_RAM = 512 * 1024 # 512 MB
+EARLY_SWAP_RAM = 512 * 1024  # 512 MB
+
 
 def cp(source, destination):
     source = os.path.join(ctx.consts.target_dir, source)
@@ -44,14 +45,17 @@ def cp(source, destination):
     ctx.logger.info("Copying from '%s' to '%s'" % (source, destination))
     shutil.copyfile(source, destination)
 
-def touch(path, mode=0644):
+
+def touch(path, mode=0o644):
     f = os.path.join(ctx.consts.target_dir, path)
     open(f, "w", mode).close()
+
 
 def chgrp(path, group):
     f = os.path.join(ctx.consts.target_dir, path)
     gid = int(grp.getgrnam(group)[2])
     os.chown(f, 0, gid)
+
 
 def product_name(path=None):
     if not path:
@@ -66,17 +70,21 @@ def product_name(path=None):
                 pass
     return release_str
 
+
 def produc_id():
     release = product_name().split()
     return release[1].lower()
+
 
 def product_release():
     release = product_name().split()
     return "".join(release[:2]).lower()
 
+
 def is_text_valid(text):
     allowed_chars = string.ascii_letters + string.digits + '.' + '_' + '-'
     return len(text) == len(filter(lambda u: [x for x in allowed_chars if x == u], text))
+
 
 def numeric_type(num):
     """ Verify that a value is given as a numeric data type.
@@ -93,6 +101,7 @@ def numeric_type(num):
 
     return num
 
+
 def insert_colons(a_string):
     """
     Insert colon between every second character.
@@ -105,6 +114,7 @@ def insert_colons(a_string):
         return insert_colons(a_string[:-2]) + ':' + suffix
     else:
         return suffix
+
 
 def get_edd_dict(devices):
     eddDevices = {}
@@ -125,6 +135,7 @@ def get_edd_dict(devices):
                 eddDevices[os.path.basename(mbrs[signature])] = number
     return eddDevices
 
+
 def run_batch(cmd, argv=[]):
     """Run command and report return value and output."""
     ctx.logger.info('Running %s' % "".join(cmd))
@@ -138,6 +149,10 @@ def run_batch(cmd, argv=[]):
         ctx.logger.debug('output for "%(command)s" is %(output)s' % {"command":cmd, "output":out})
         ctx.logger.debug('error value for "%(command)s" is %(error)s' % {"command":cmd, "error":error})
     return (p.returncode, out, error)
+
+
+def dosed(filename, pattern, replace):
+    run_batch("sed -i -E 's/{}/{}/' {}".format(pattern, replace, filename))
 
 
 # TODO: it might be worthwhile to try to remove the
@@ -172,6 +187,9 @@ def run_logged(cmd, argv):
 
     return (p.returncode, out, error)
 
+
+# FIXME: bu kısım efi desteklense bile gpt tablosu kullanan diskler için
+# düzgünce ayarlanmalı
 efi = None
 def isEfi():
     global efi
@@ -182,6 +200,11 @@ def isEfi():
     # use current kernel
     if os.path.exists("/sys/firmware/efi"):
         efi = True
+
+    # IF disk partition table == dos:
+    #     efi = False
+    # if ctx.storage:
+    #     efi = False
 
     # if os.system("dmidecode -t 0 | grep UEFI") == 0:
     #     efi = True
@@ -202,6 +225,7 @@ def isEfi():
     print(efi)
     return efi
 
+
 def getArch():
     if isX86(bits=32):
         return 'i686'
@@ -209,6 +233,7 @@ def getArch():
         return 'x86_64'
     else:
         return os.uname()[4]
+
 
 def isX86(bits=None):
     arch = os.uname()[4]
@@ -225,6 +250,7 @@ def isX86(bits=None):
 
     return False
 
+
 def memInstalled():
     f = open("/proc/meminfo", "r")
     lines = f.readlines()
@@ -237,6 +263,7 @@ def memInstalled():
             break
 
     return int(mem)
+
 
 def swap_suggestion(quiet=0):
     mem = memInstalled()/1024
@@ -260,6 +287,7 @@ def swap_suggestion(quiet=0):
 
     return (minswap, maxswap)
 
+
 def notify_kernel(path, action="change"):
     """ Signal the kernel that the specified device has changed. """
     ctx.logger.debug("notifying kernel of '%s' event on device %s" % (action, path))
@@ -272,6 +300,7 @@ def notify_kernel(path, action="change"):
     f.write("%s\n" % action)
     f.close()
 
+
 def get_sysfs_path_by_name(dev_name, class_name="block"):
     dev_name = os.path.basename(dev_name)
     sysfs_class_dir = "/sys/class/%s" % class_name
@@ -279,9 +308,10 @@ def get_sysfs_path_by_name(dev_name, class_name="block"):
     if os.path.exists(dev_path):
         return dev_path
 
+
 def mkdirChain(dir):
     try:
-        os.makedirs(dir, 0755)
+        os.makedirs(dir, 0o755)
     except OSError as e:
         try:
             if e.errno == errno.EEXIST and stat.S_ISDIR(os.stat(dir).st_mode):
@@ -290,6 +320,7 @@ def mkdirChain(dir):
             pass
 
         ctx.logger.error("could not create directory %s: %s" % (dir, e.strerror))
+
 
 def swap_amount():
     f = open("/proc/meminfo", "r")
@@ -302,6 +333,7 @@ def swap_amount():
             return int(fields[1])
     return 0
 
+
 def mount(device, location, filesystem, readOnly=False,
           bindMount=False, remount=False, options=None, createDir=True):
     flags = None
@@ -311,7 +343,8 @@ def mount(device, location, filesystem, readOnly=False,
     else:
         opts = options.split(",")
 
-    if ctx.mountCount.has_key(location) and ctx.mountCount[location] > 0:
+    # if ctx.mountCount.has_key(location) and ctx.mountCount[location] > 0:
+    if location in ctx.mountCount and ctx.mountCount[location] > 0:
         ctx.mountCount[location] = ctx.mountCount[location] + 1
         return
 
@@ -335,6 +368,7 @@ def mount(device, location, filesystem, readOnly=False,
 
     return rc
 
+
 def umount(location, removeDir=True):
     location = os.path.normpath(location)
 
@@ -354,10 +388,12 @@ def umount(location, removeDir=True):
         except:
             pass
 
-    if not rc and ctx.mountCount.has_key(location):
+    # if not rc and ctx.mountCount.has_key(location):
+    if not rc and location in ctx.mountCount:
         del ctx.mountCount[location]
 
     return rc
+
 
 def createAvailableSizeSwapFile(storage):
     (minsize, maxsize) = swap_suggestion()
@@ -386,16 +422,27 @@ def chroot(command):
         ctx.logger.error("util.chroot:StorageSet not activated")
 
 
+def chroot2(command):
+    if ctx.storage.storageset.active:
+        return run_batch("chroot", [ctx.consts.target_dir, command])
+    else:
+        print("util.chroot:StorageSet not activated")
+        ctx.logger.error("util.chroot:StorageSet not activated")
+        return (None, None, None)
+
+
 def start_dbus():
     chroot("/sbin/ldconfig")
     chroot("/sbin/update-environment")
     chroot("/bin/service dbus start")
+
 
 def stop_dbus():
     # stop dbus
     chroot("/bin/service dbus stop")
     # kill comar in chroot if any exists
     chroot("/bin/killall comar")
+
 
 def comarLinkInitialized():
     if ctx.flags.install_type == ctx.STEP_BASE or \
@@ -433,11 +480,13 @@ def comarLinkInitialized():
     ctx.logger.info("Comar activated")
     return True
 
+
 def check_link():
     active = True
     if not ctx.link:
         active = comarLinkInitialized()
     return active
+
 
 def getUsers():
     users = []
@@ -452,6 +501,7 @@ def getUsers():
             u.uid = user[0]
             users.append(u)
     return users
+
 
 def backup_log(remove=False):
     try:
@@ -468,11 +518,14 @@ def backup_log(remove=False):
     else:
         return True
 
+
 def reboot():
     run_batch("/tmp/reboot", ["-f"])
 
+
 def shutdown():
     run_batch("/tmp/shutdown", ["-h", "now"])
+
 
 def eject(mount_point=ctx.consts.source_dir):
     if "copytoram" not in open("/proc/cmdline", "r").read().strip().split():
@@ -480,13 +533,16 @@ def eject(mount_point=ctx.consts.source_dir):
     else:
         reboot()
 
+
 def sync():
     os.system("sync")
     os.system("sync")
     os.system("sync")
 
+
 def check_dual_boot():
     return isX86()
+
 
 def writeLocaleFromCmdline():
     locale_file_path = os.path.join(ctx.consts.target_dir, "etc/env.d/03locale")
@@ -494,6 +550,7 @@ def writeLocaleFromCmdline():
 
     f.write("LANG=%s\n" % yali.localedata.locales[ctx.lang]["locale"])
     f.write("LC_ALL=%s\n" % yali.localedata.locales[ctx.lang]["locale"])
+
 
 def setKeymap(keymap, variant=None, root=False):
     ad = ""
@@ -513,6 +570,7 @@ def setKeymap(keymap, variant=None, root=False):
     else:
         chroot("hav call zorg Xorg.Display setKeymap %s %s" % (keymap, variant))
 
+
 def writeKeymap(keymap):
     mudur_file_path = os.path.join(ctx.consts.target_dir, "etc/conf.d/mudur")
     lines = []
@@ -528,14 +586,16 @@ def writeKeymap(keymap):
 
     open(mudur_file_path, "w").writelines(lines)
 
+
 def write_config_option(conf_file, section, option, value):
     configParser = ConfigParser.ConfigParser()
     configParser.read(conf_file)
     if not configParser.has_section(section):
         configParser.add_section(section)
     configParser.set(section, option, value)
-    with open(conf_file, "w")  as conf:
+    with open(conf_file, "w") as conf:
         configParser.write(conf)
+
 
 def parse_branding_screens(release_file):
     try:
@@ -556,7 +616,7 @@ def parse_branding_screens(release_file):
             name = screen_tag.getTagData("name")
             icon = screen_tag.getTagData("icon")
             if not icon:
-                icon  = ""
+                icon = ""
 
             title_tags = screen_tag.tags("title")
             if title_tags:
@@ -579,6 +639,7 @@ def parse_branding_screens(release_file):
             screens[name] = (icon, titles, helps)
 
     return screens
+
 
 def parse_branding_slideshows(release_file):
     try:
@@ -611,15 +672,17 @@ def parse_branding_slideshows(release_file):
 
     return slideshows
 
+
 def set_partition_privileges(device, mode, uid, gid):
-    device_path =  os.path.join(ctx.consts.target_dir, device.format.mountpoint.lstrip("/"))
+    device_path = os.path.join(ctx.consts.target_dir, device.format.mountpoint.lstrip("/"))
     ctx.logger.debug("Trying to change privileges %s path" % device_path)
     if os.path.exists(device_path):
         try:
             os.chmod(device_path, mode)
             os.chown(device_path, uid, gid)
         except OSError, msg:
-                ctx.logger.debug("Unexpected error: %s" % msg)
+            ctx.logger.debug("Unexpected error: %s" % msg)
+
 
 def grub_disk_name(storage, device, exists=False):
     if exists:
@@ -627,12 +690,14 @@ def grub_disk_name(storage, device, exists=False):
     else:
         return "hd%d" % storage.drives.index(device.name)
 
+
 def grub_partition_name(storage, device, exists=False):
     (disk, number) = get_disk_partition(device)
     if number is not None:
         return "(%s,%d)" % (grub_disk_name(storage, disk, exists), number - 1)
     else:
         return "(%s)" % (grub_disk_name(storage, disk, exists))
+
 
 def get_disk_partition(device):
     if device.type == "partition":
@@ -643,6 +708,7 @@ def get_disk_partition(device):
         disk = device
 
     return (disk, number)
+
 
 def get_grub_conf(device_path, format_type):
     if os.path.exists(ctx.consts.tmp_mnt_dir):
@@ -682,6 +748,7 @@ def get_grub_conf(device_path, format_type):
 
     return grub_conf
 
+
 class PackageCollection(object):
     def __init__(self, id, title, description, icon, translations, default=False):
         self.default = default
@@ -690,7 +757,8 @@ class PackageCollection(object):
         self.description = description
         self.icon = icon
         self.translations = translations
-        self.index =  os.path.join(ctx.consts.source_dir, "repo/%s-index.xml.bz2" % id)
+        self.index = os.path.join(ctx.consts.source_dir, "repo/%s-index.xml.bz2" % id)
+
 
 def get_collections():
     packageCollection = []
@@ -699,7 +767,8 @@ def get_collections():
         title = ""
         description = ""
         locale = os.environ["LANG"].split(".")[0]
-        if not translations.has_key(locale):
+        # if not translations.has_key(locale):
+        if locale not in translations:
             ctx.logger.debug("Collection (%s) has no translation in %s locale. Default language (%s) is setting ..." %
                                                             (id, locale, translations["default"]))
             locale = translations["default"]

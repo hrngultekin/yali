@@ -13,11 +13,11 @@
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
-    _ = lambda x,y: y
+except Exception:
+    _ = lambda x, y: y
 
 from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import pyqtSignal
+# from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap
 
 import pisi.ui
@@ -27,6 +27,7 @@ from yali.gui import ScreenWidget
 from yali.gui.Ui.checkcdwidget import Ui_CheckCDWidget
 
 from yali.gui.YaliDialog import Dialog
+
 
 class Widget(QWidget, ScreenWidget):
     name = "mediaCheck"
@@ -54,7 +55,8 @@ class Widget(QWidget, ScreenWidget):
             self.check_media_stop = False
             self.ui.progressBar.show()
             icon = QIcon()
-            icon.addPixmap(QPixmap(":/gui/pics/dialog-error.png"), QIcon.Normal, QIcon.Off)
+            icon.addPixmap(QPixmap(":/gui/pics/dialog-error.png"),
+                           QIcon.Normal, QIcon.Off)
             self.ui.checkButton.setIcon(icon)
             self.ui.checkButton.setText("")
             self.checkMedia()
@@ -62,7 +64,8 @@ class Widget(QWidget, ScreenWidget):
             self.check_media_stop = True
             self.ui.progressBar.show()
             icon = QIcon()
-            icon.addPixmap(QPixmap(":/gui/pics/task-accepted.png"), QIcon.Normal, QIcon.Off)
+            icon.addPixmap(QPixmap(":/gui/pics/task-accepted.png"),
+                           QIcon.Normal, QIcon.Off)
             self.ui.checkButton.setIcon(icon)
             self.ui.checkButton.setText(_("General", "Validate"))
 
@@ -70,41 +73,50 @@ class Widget(QWidget, ScreenWidget):
         ctx.mainScreen.disableNext()
         ctx.mainScreen.disableBack()
 
-        ctx.interface.informationWindow.update(_("General", "Starting validation..."))
+        ctx.interface.informationWindow.update(
+            _("General", "Starting validation..."))
+
         class PisiUI(pisi.ui.UI):
             def notify(self, event, **keywords):
                 pass
+
             def display_progress(self, operation, percent, info, **keywords):
                 pass
 
-        yali.pisiiface.initialize(ui=PisiUI(), with_comar=False, nodestDir=True)
+        yali.pisiiface.initialize(
+            ui=PisiUI(), with_comar=False, nodestDir=True)
         yali.pisiiface.addCdRepo()
         ctx.mainScreen.processEvents()
         pkg_names = yali.pisiiface.getAvailablePackages()
 
         self.ui.progressBar.setMaximum(len(pkg_names))
 
-        self.ui.checkLabel.setText(_("General", "Package validation is in progress. "
-                                     "Please wait until it is completed."))
+        self.ui.checkLabel.setText(
+            _("General", "Package validation is in progress. "
+                "Please wait until it is completed."))
         cur = 0
         flag = 0
         for pkg_name in pkg_names:
             cur += 1
             ctx.logger.debug("Validating %s " % pkg_name)
-            ctx.interface.informationWindow.update(_("General", "Validating %s") % pkg_name)
+            ctx.interface.informationWindow.update(
+                _("General", "Validating %s") % pkg_name)
             if self.check_media_stop:
                 continue
             try:
                 yali.pisiiface.checkPackageHash(pkg_name)
                 self.ui.progressBar.setValue(cur)
-            except:
-                rc  = ctx.interface.messageWindow(_("General", "Warning"),
-                                                  _("General", "Validation of %s package failed."
-                                                    "Please remaster your installation medium and"
-                                                    "reboot.") % pkg_name,
-                                                  type="custom", customIcon="warning",
-                                                  customButtons=[_("General", "Skip Validation"), _("General", "Skip Package"), _("General", "Reboot")],
-                                                  default=0)
+            except Exception:
+                rc = ctx.interface.messageWindow(
+                    _("General", "Warning"),
+                    _("General", "Validation of %s package failed."
+                        "Please remaster your installation medium and"
+                        "reboot.") % pkg_name,
+                    type="custom", customIcon="warning",
+                    customButtons=[_("General", "Skip Validation"),
+                                   _("General", "Skip Package"),
+                                   _("General", "Reboot")],
+                    default=0)
                 flag = 1
                 if not rc:
                     self.ui.validationBox.hide()
@@ -117,7 +129,9 @@ class Widget(QWidget, ScreenWidget):
                     yali.util.reboot()
 
         if not self.check_media_stop and flag == 0:
-            ctx.interface.informationWindow.update(_("General", '<font color="#FFF"><b>Validation succeeded. You can proceed with the installation.</b></font>'))
+            ctx.interface.informationWindow.update(
+                _("General", '<font color="#FFF"><b>Validation succeeded. \
+                  You can proceed with the installation.</b></font>'))
             self.ui.validationSucceedBox.show()
             self.ui.validationBox.hide()
         else:
@@ -129,7 +143,6 @@ class Widget(QWidget, ScreenWidget):
         ctx.mainScreen.enableNext()
         ctx.mainScreen.enableBack()
 
-        self.ui.checkLabel.setText(_("General", "Package validation is finished."))
+        self.ui.checkLabel.setText(
+            _("General", "Package validation is finished."))
         ctx.interface.informationWindow.hide()
-
-

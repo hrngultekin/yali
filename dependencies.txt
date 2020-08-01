@@ -1,4 +1,4 @@
-Pisi Linux 2.1 YALI 
+Pisi Linux 2.1 YALI
 
 Dependencies
 ------------
@@ -29,5 +29,12 @@ yali-branding-pisilinux
 yali-theme-pisilinux
 zorg
 
+Yeni Eklenenler
+---------------
+efibootmgr
+squashfs-tools
+rsync
 
-? python-cairo  python-pygobject  python-pygobject-devel  python-qt5-devel
+
+
+? python-cairo  python-pygobject  python-pygobject-devel

@@ -36,31 +36,35 @@ RESIZE_GROW = 89
 resize_strings = {RESIZE_SHRINK: "Shrink",
                   RESIZE_GROW: "Grow"}
 
+
 def operation_type_from_string(type_string):
     if type_string is None:
         return None
 
-    for (k,v) in operation_strings.items():
+    for (k, v) in operation_strings.items():
         if v.lower() == type_string.lower():
             return k
 
     return resize_type_from_string(type_string)
 
+
 def operation_object_from_string(type_string):
     if type_string is None:
         return None
 
-    for (k,v) in object_strings.items():
+    for (k, v) in object_strings.items():
         if v.lower() == type_string.lower():
             return k
+
 
 def resize_type_from_string(type_string):
     if type_string is None:
         return None
 
-    for (k,v) in resize_strings.items():
+    for (k, v) in resize_strings.items():
         if v.lower() == type_string.lower():
             return k
+
 
 class DeviceOperation(object):
     """ An operation that will be carried out in the future on a Device.
@@ -101,7 +105,6 @@ class DeviceOperation(object):
         if not isinstance(device, Device):
             raise ValueError("arg 1 must be a Device instance")
         self.device = device
-
 
     def execute(self, intf=None):
         """ perform the operation """
@@ -144,6 +147,7 @@ class DeviceOperation(object):
                                  self.device.id)
         return s
 
+
 class OperationCreateDevice(DeviceOperation):
     """ Operation representing the creation of a new device. """
     type = OPERATION_TYPE_CREATE
@@ -155,6 +159,7 @@ class OperationCreateDevice(DeviceOperation):
 
     def execute(self, intf=None):
         self.device.create(intf=intf)
+
 
 class OperationDestroyDevice(DeviceOperation):
     """ An operation representing the deletion of an existing device. """
@@ -223,7 +228,7 @@ class OperationCreateFormat(DeviceOperation):
         if isinstance(self.device, Partition):
             for flag in partitionFlag.keys():
                 # Keep the LBA flag on pre-existing partitions
-                if flag in [ PARTITION_LBA, self.format.partedFlag ]:
+                if flag in [PARTITION_LBA, self.format.partedFlag]:
                     continue
                 self.device.unsetFlag(flag)
 
@@ -321,6 +326,7 @@ class OperationResizeFormat(DeviceOperation):
     def cancel(self):
         self.device.format.targetSize = self.origSize
 
+
 class OperationMigrateFormat(DeviceOperation):
     """ An operation representing the migration of an existing filesystem. """
     type = OPERATION_TYPE_MIGRATE
@@ -339,4 +345,3 @@ class OperationMigrateFormat(DeviceOperation):
 
     def cancel(self):
         self.device.format.migrate = False
-

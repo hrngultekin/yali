@@ -28,21 +28,26 @@ except:
 
 import _sysutils
 
+
 def available_space(path):
     return _sysutils.device_space_free(path)
+
 
 def ext2IsDirty(device):
     label = _sysutils.e2dirty(device)
     return label
 
+
 def ext2HasJournal(device):
     hasjournal = _sysutils.e2hasjournal(device)
     return hasjournal
+
 
 def checkKernelFlags(flag):
     for line in open("/proc/cpuinfo", "r").readlines():
         if line.startswith("flags"):
             return flag in line
+
 
 def isLoadedKernelPAE():
     if os.uname()[2].split("-")[-1].__eq__("General", "pae"):
@@ -50,26 +55,28 @@ def isLoadedKernelPAE():
     else:
         return False
 
+
 def setMouse(key="left"):
-    struct = {_("General", "left") :"1 2 3",
-              _("General", "right"):"3 2 1"}
+    struct = {_("General", "left"): "1 2 3",
+              _("General", "right"): "3 2 1"}
     os.system("xmodmap -e \"pointer = %s\"" % struct[key])
 
     # Fix for TouchPads in left handed mouse...
     if key == "right":
         os.system("synclient TapButton1=3 TapButton3=1")
 
+
 def liveMediaSystem(path=None):
     if not path:
-        path  = "/run/pisilinux/livemedia"
+        path = "/run/pisilinux/livemedia"
     if os.path.exists(path):
-        return file("/run/pisilinux/livemedia", 'r').read().split('\n')[0]
+        return open("/run/pisilinux/livemedia", 'r').read().split('\n')[0]
     else:
         return None
 
 
 def getShadowed(passwd):
-    des_salt = list('./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') 
+    des_salt = list('./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
     salt, magic = str(random.random())[-8:], '$1$'
 
     ctx = hashlib.new('md5', passwd)
@@ -82,7 +89,7 @@ def getShadowed(passwd):
 
     final = ctx1.digest()
 
-    for i in range(len(passwd), 0 , -16):
+    for i in range(len(passwd), 0, -16):
         if i > 16:
             ctx.update(final)
         else:
@@ -136,4 +143,3 @@ def getShadowed(passwd):
     rv = rv + _to64(l, 2)
 
     return rv
-
