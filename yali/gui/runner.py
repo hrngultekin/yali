@@ -101,7 +101,7 @@ class Runner():
 
     def _reinit_screen(self):
         QTimer.singleShot(700, self._init_screen)
-    
+
     def _init_screen(self):
         # We want it to be a full-screen window
         # inside the primary display.
@@ -111,10 +111,10 @@ class Runner():
         self._window.setMaximumSize(screen.size())
         # FIXME: ui dosyasları görsellik açin yeniden düzenlenmeli
         self._window.setGeometry(0,0,1120,630)
-        
+
         #self._window.move(screen.topLeft())
         self._window.show()
-    
+
     def _get_screens(self, install_type):
         screens = []
         ctx.logger.info("Install type is %s" % ctx.STEP_TYPE_STRINGS[install_type])
@@ -142,12 +142,12 @@ class Runner():
                 screens.append(screenClass)
 
         return screens
-    
-    
+
+
     def _set_steps(self, screens):
         self._window.createWidgets(screens)
         self._window.setCurrent(ctx.flags.startup)
-    
+
     def run(self):
         # Use default theme;
         # if you use different Qt4 theme our works looks ugly :)

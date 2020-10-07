@@ -291,16 +291,19 @@ class Widget(QWidget, ScreenWidget):
                 ctx.consts.pisilinux_repo_uri))
         # print(yali.util.chroot2("pisi lr")[1])
 
-        import ConfigParser
-        cfg = ConfigParser.ConfigParser()
-        cfg.optionxform = str
-        cfg.read("{}/etc/sddm.conf".format(ctx.consts.target_dir))
+        sddm_conf = "{}/etc/sddm.conf".format(ctx.consts.target_dir)
+        if os.path.exists(sddm_conf):
+            import ConfigParser
+            cfg = ConfigParser.ConfigParser()
+            cfg.optionxform = str
 
-        cfg.set("Autologin", "Session", "")
-        cfg.set("Autologin", "User", "")
+            cfg.read(sddm_conf)
 
-        with open("{}/etc/sddm.conf".format(ctx.consts.target_dir), "w") as f:
-            cfg.write(f)
+            cfg.set("Autologin", "Session", "")
+            cfg.set("Autologin", "User", "")
+
+            with open(sddm_conf, "w") as f:
+                cfg.write(f)
 
         # WARNING: /etc/inittab düzenlenecek (root oto giriş iptali için)
         yali.util.dosed(
