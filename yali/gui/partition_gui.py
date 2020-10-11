@@ -33,7 +33,7 @@ class PartitionEditor:
         self.partedPartition = partedPartition
 
         if isNew:
-            title = _("General", "Create Partition on %(path)s (%(model)s)") %  {"path":os.path.basename(partedPartition.disk.device.path),
+            title = _("General", "Create Partition on %(path)s (%(model)s)") % {"path":os.path.basename(partedPartition.disk.device.path),
                                                                       "model":partedPartition.disk.device.model}
         else:
             try:
@@ -278,7 +278,7 @@ class PartitionWidget(QtWidgets.QWidget, Ui_PartitionWidget):
                 self.resizeSpin.hide()
                 self.resizeSlider.hide()
 
-        #Size
+        # Size
         if not self.origrequest.exists:
             if self.parent.isNew:
                 maxsize = self.parent.partedPartition.getSize(unit="MB")
@@ -294,9 +294,9 @@ class PartitionWidget(QtWidgets.QWidget, Ui_PartitionWidget):
             self.sizeSpin.hide()
             self.sizeSlider.hide()
 
-        #create only as primary
+        # create only as primary
         if not self.origrequest.exists and \
-        self.parent.storage.extendedPartitionsSupported:
+                self.parent.storage.extendedPartitionsSupported:
             self.primaryCheck.setChecked(False)
             if self.origrequest.req_primary:
                 self.primaryCheck.setChecked(True)
@@ -313,21 +313,39 @@ class PartitionWidget(QtWidgets.QWidget, Ui_PartitionWidget):
 
     def formatRadioToggled(self, checked):
         if checked:
-            format  = formats.getFormat(str(self.formatCombo.currentText()))
+            format = formats.getFormat(str(self.formatCombo.currentText()))
             self.enableMountpoint(format)
 
     def formatTypeChanged(self, index):
-        format  = formats.getFormat(str(self.sender().itemText(index)))
+        # setMaximum if maxSize ?< self.origrequest.req_size
+        format = formats.getFormat(str(self.sender().itemText(index)))
         self.enableMountpoint(format)
 
+        if not self.origrequest.exists:
+            if self.parent.isNew:
+                maxsize = self.parent.partedPartition.getSize(unit="MB")
+                if 0 < format.maxSize < maxsize:
+                    maxsize = format.maxSize
+                self.sizeSpin.setMaximum(maxsize)
+                self.sizeSlider.setMaximum(maxsize)
+            elif not self.parent.isNew and self.origrequest.req_size:
+                maxsize = self.origrequest.req_size
+                if 0 < format.maxSize < maxsize:
+                    maxsize = format.maxSize
+                self.sizeSpin.setMaximum(maxsize)
+                self.sizeSpin.setValue(maxsize)
+                self.sizeSlider.setMaximum(maxsize)
+                self.sizeSlider.setValue(maxsize)
+
     def mountPointChanged(self, index):
-        print "mount point", self.mountpointMenu.itemText(index)
+        print("mount point", self.mountpointMenu.itemText(index))
+        print(formats.getFormat("efi").type)
         if yali.util.isEfi() and self.mountpointMenu.itemText(index) == "/boot/efi":
-            self.filesystemMenu.setCurrentIndex(self.filesystemMenu.findText(formats.getFormat("efi").name))
+            self.filesystemMenu.setCurrentIndex(self.filesystemMenu.findText(formats.getFormat("efi").type))
         elif self.mountpointMenu.itemText(index) == "/boot":
             self.filesystemMenu.setCurrentIndex(self.filesystemMenu.findText(formats.get_default_filesystem_type(boot=True)))
 
         if self.formatRadio.isVisible():
             self.radioButton.setChecked(True)
-            print "partition_gui.py line 329 type must be bool ->", type(self.mountpointMenu.itemData(index))
+            print("partition_gui.py line 329 type must be bool ->", type(self.mountpointMenu.itemData(index)))
             self.formatRadio.setChecked(self.mountpointMenu.itemData(index))

@@ -416,16 +416,17 @@ quit
             self.storage.devicetree.getDeviceByName(self.stage1Device))
 
         if yali.util.isEfi():
-            efiDev = self.storage.storageset.bootDevice
-            yali.util.chroot("mkdir /boot/efi")
-            yali.util.chroot("mount %s /boot/efi" % efiDev.path)
+            print(self.storage.storageset.mountpoints)
+            # efiDev = self.storage.storageset.bootDevice
+            # yali.util.chroot("mkdir /boot/efi")
+            # yali.util.chroot("mount %s /boot/efi" % efiDev.path)
             yali.util.chroot("grub2-install --recheck --target=x86_64-efi \
                 --efi-directory=/boot/efi --bootloader-id=pisilinux \
                 %s" % stage1Devices[0].path)
 
             # efi boot sıralaması için dosyayı oku pisilinux u ilk sıraya al
             set_pisi_boot_order_first()
-            yali.util.chroot("umount /boot/efi")
+            # yali.util.chroot("umount /boot/efi")
         else:
             yali.util.chroot(
                 "grub2-install --recheck %s" % stage1Devices[0].path)

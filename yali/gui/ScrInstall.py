@@ -240,6 +240,10 @@ class Widget(QWidget, ScreenWidget):
         self.ui.slideText.setText(description)
 
     def sqfsInstallFinished(self):
+        # bilgi yazısı kontrol edilecek
+        self.installProgress.setVisible(False)
+        ctx.interface.informationWindow.update(
+            message=_("General", "Fstab, grub configuration, etc is writing."))
         yali.postinstall.writeFstab()
 
         # Configure Pending...
@@ -258,8 +262,15 @@ class Widget(QWidget, ScreenWidget):
         # copy needed files
         # yali.util.cp("/etc/resolv.conf", "%s/etc/" % ctx.consts.target_dir)
 
+        ctx.interface.informationWindow.update(
+            message=_("General",
+                      "Unnecessary files and packages are being removed."))
         # run dbus in chroot
         yali.util.start_dbus()
+        kver = ".".join(os.uname()[2].split(".")[:2])
+        yali.util.run_batch(
+            "rm -rf {}/etc/modules.autoload.d/kernel-{}".format(
+                ctx.consts.target_dir, kver))
 
         yali.util.run_batch(
             "rm -rf {}/etc/polkit-1/localauthority/90-mandatory.d/".format(
@@ -280,7 +291,10 @@ class Widget(QWidget, ScreenWidget):
         yali.util.run_batch(
             "cp -f /etc/resolv.conf {}/etc/resolv.conf".format(
                 ctx.consts.target_dir))
-        # print(yali.util.chroot2("pisi lr")[1])
+
+        ctx.interface.informationWindow.update(
+            message=_("General",
+                      "Paket depoları ayarlanıyor."))
         yali.util.chroot("pisi rr live")
         # print(ctx.consts.pisilinux_repo_name)
         # print(ctx.consts.pisilinux_repo_uri)

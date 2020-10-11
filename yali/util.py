@@ -188,7 +188,7 @@ def run_logged(cmd, argv):
     return (p.returncode, out, error)
 
 
-# FIXME: bu kısım efi desteklense bile gpt tablosu kullanan diskler için
+# FIXME: bu kısım efi desteklense bile mbr tablosu kullanan diskler için
 # düzgünce ayarlanmalı
 efi = None
 def isEfi():

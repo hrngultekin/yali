@@ -111,7 +111,7 @@ class Dialog(QDialog):
                     widget.resizeDialog[int,int].connect(self.resize)
                 except:
                     pass
-            
+
 
         if self.__use_title:
             if closeButton:
@@ -229,16 +229,18 @@ class MessageWindow:
 
         return self.rc
 
-def QuestionDialog(title, text, info = None, dontAsk = False):
+
+def QuestionDialog(title, text, info=None, dontAsk=False):
     msgBox = QMessageBox()
 
     buttonYes = msgBox.addButton(_("General", "Yes"), QMessageBox.ActionRole)
     buttonNo = msgBox.addButton(_("General", "No"), QMessageBox.ActionRole)
 
-    answers = {buttonYes:"yes",
-               buttonNo :"no"}
+    answers = {buttonYes: "yes",
+               buttonNo: "no"}
     if dontAsk:
-        buttonDontAsk = msgBox.addButton(_("General", "Don't ask again"), QMessageBox.ActionRole)
+        buttonDontAsk = msgBox.addButton(
+            _("General", "Don't ask again"), QMessageBox.ActionRole)
         answers[buttonDontAsk] = "dontask"
 
     msgBox.setText(text)
@@ -246,8 +248,9 @@ def QuestionDialog(title, text, info = None, dontAsk = False):
         info = _("General", "Do you want to continue?")
     msgBox.setInformativeText(info)
 
-    dialog = Dialog(_("General", title), msgBox, closeButton = False, isDialog = True, icon="question")
-    dialog.resize(300,120)
+    dialog = Dialog(_("General", title), msgBox,
+                    closeButton=False, isDialog=True, icon="question")
+    dialog.resize(300, 120)
     dialog.exec_()
 
     ctx.mainScreen.processEvents()
@@ -268,10 +271,12 @@ def InfoDialog(text, button=None, title=None, icon="info"):
 
     msgBox.setText(text)
 
-    dialog = Dialog(_("General", title), msgBox, closeButton = False, isDialog = True, icon = icon)
-    dialog.resize(300,120)
+    dialog = Dialog(_("General", title), msgBox,
+                    closeButton=False, isDialog=True, icon=icon)
+    dialog.resize(300, 120)
     dialog.exec_()
     ctx.mainScreen.processEvents()
+
 
 class InformationWindow(QWidget):
 
@@ -322,7 +327,7 @@ class InformationWindow(QWidget):
         self.horizontalLayout.addWidget(self.icon)
         self.horizontalLayout.addWidget(self.label)
 
-        self.gridlayout.addWidget(self.frame,0,0,1,1)
+        self.gridlayout.addWidget(self.frame, 0, 0, 1, 1)
 
     def update(self, message, type=None, spinner=False):
         fontMetric = self.label.fontMetrics()
@@ -332,18 +337,21 @@ class InformationWindow(QWidget):
             self.icon.show()
             if type == "error":
                 self.icon.setPixmap(QPixmap(":/gui/pics/dialog-error.png"))
-                self.setStyleSheet(" QFrame#frame {background-color: rgba(255,0,0,100);} ")
+                self.setStyleSheet(
+                    " QFrame#frame {background-color: rgba(255,0,0,100);} ")
 
             elif type == "warning":
                 self.icon.setPixmap(QPixmap(":/gui/pics/dialog-warning.png"))
-                self.setStyleSheet(" QFrame#frame {background-color: rgba(0,0,0,100);} ")
+                self.setStyleSheet(
+                    " QFrame#frame {background-color: rgba(0,0,0,100);} ")
 
             self.setFixedWidth(textWidth + self.icon.width() + 50)
             self.label.setText(message)
 
         else:
             self.icon.hide()
-            self.setStyleSheet(" QFrame#frame {background-color: rgba(0,0,0,100);} ")
+            self.setStyleSheet(
+                " QFrame#frame {background-color: rgba(0,0,0,100);} ")
             self.setFixedWidth(textWidth + self.icon.width() + 100)
             self.label.setText(message)
 
@@ -363,6 +371,7 @@ class InformationWindow(QWidget):
     def hide(self):
         QWidget.hide(self)
         self.refresh()
+
 
 class ProgressWindow(QWidget):
     def __init__(self, message):
@@ -405,7 +414,7 @@ class ProgressWindow(QWidget):
         self.label = QLabel(self.frame)
         self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.horizontalLayout.addWidget(self.label)
-        self.gridlayout.addWidget(self.frame,0,0,1,1)
+        self.gridlayout.addWidget(self.frame, 0, 0, 1, 1)
 
         self.update(message)
 
@@ -430,8 +439,10 @@ class ProgressWindow(QWidget):
         QWidget.hide(self)
         self.refresh()
 
+
 class ExceptionWidget(QWidget):
-    resizeDialog=pyqtSignal(int,int)
+    resizeDialog = pyqtSignal(int, int)
+
     def __init__(self, traceback, rebootButton=False):
         QWidget.__init__(self, None)
         self.ui = Ui_Exception()
@@ -445,15 +456,18 @@ class ExceptionWidget(QWidget):
     def showBackTrace(self):
         self.ui.traceback.show()
         self.ui.rebootButton.show()
-        self.ui.showBackTrace.hide()    #from PyQt5.Qt import QWidget
-        self.resizeDialog[int,int].emit(440, 440)
+        self.ui.showBackTrace.hide()    # from PyQt5.Qt import QWidget
+        self.resizeDialog[int, int].emit(440, 440)
+
 
 class ExceptionWindow:
     def __init__(self, error, traceback):
         self.rc = None
         self.dialog = None
-        self.dialog = Dialog(_("General", "Error reporting"), ExceptionWidget(traceback, rebootButton=True), icon="error")
-        self.dialog.resize(300,160)
+        self.dialog = Dialog(_("General", "Error reporting"),
+                             ExceptionWidget(traceback, rebootButton=True),
+                             icon="error")
+        self.dialog.resize(300, 160)
         self.run()
 
     def run(self):
@@ -537,15 +551,16 @@ class Tetris(QFrame):
             for j in range(Tetris.BoardWidth):
                 shape = self.shapeAt(j, Tetris.BoardHeight - i - 1)
                 if shape != Tetrominoes.NoShape:
-                    self.drawSquare(painter,
-                        rect.left() + j * self.squareWidth(),
+                    self.drawSquare(
+                        painter, rect.left() + j * self.squareWidth(),
                         boardTop + i * self.squareHeight(), shape)
 
         if self.curPiece.shape() != Tetrominoes.NoShape:
             for i in range(4):
                 x = self.curX + self.curPiece.x(i)
                 y = self.curY - self.curPiece.y(i)
-                self.drawSquare(painter, rect.left() + x * self.squareWidth(),
+                self.drawSquare(
+                    painter, rect.left() + x * self.squareWidth(),
                     boardTop + (Tetris.BoardHeight - y - 1) * self.squareHeight(),
                     self.curPiece.shape())
 
@@ -674,7 +689,7 @@ class Tetris(QFrame):
                       0xCCCC66, 0xCC66CC, 0x66CCCC, 0xDAAA00]
 
         color = QColor(colorTable[shape])
-        painter.fillRect(x + 1, y + 1, self.squareWidth() - 2, 
+        painter.fillRect(x + 1, y + 1, self.squareWidth() - 2,
             self.squareHeight() - 2, color)
 
         painter.setPen(color.light())
@@ -684,7 +699,7 @@ class Tetris(QFrame):
         painter.setPen(color.dark())
         painter.drawLine(x + 1, y + self.squareHeight() - 1,
             x + self.squareWidth() - 1, y + self.squareHeight() - 1)
-        painter.drawLine(x + self.squareWidth() - 1, 
+        painter.drawLine(x + self.squareWidth() - 1,
             y + self.squareHeight() - 1, x + self.squareWidth() - 1, y + 1)
 
 class Tetrominoes(object):

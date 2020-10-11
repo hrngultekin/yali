@@ -12,13 +12,13 @@
 try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
-except:
+except Exception:
     _ = lambda x,y: y
 import pardus.xorg
 
 
-from PyQt5.QtWidgets import (QWidget, QLineEdit, QListWidgetItem)#, QFocusEvent 
-from PyQt5.QtCore import (pyqtSignal, QTimeLine)
+from PyQt5.QtWidgets import (QWidget, QLineEdit, QListWidgetItem)#, QFocusEvent
+from PyQt5.QtCore import (QTimeLine, QEvent)  # pyqtSignal,
 from PyQt5.QtGui import (QIcon, QPixmap)
 
 
@@ -27,6 +27,8 @@ import yali.postinstall
 import yali.context as ctx
 from yali.gui import ScreenWidget
 from yali.gui.Ui.setupuserswidget import Ui_SetupUsersWidget
+
+
 class Widget(QWidget, ScreenWidget):
     name = "accounts"
 
@@ -38,7 +40,7 @@ class Widget(QWidget, ScreenWidget):
         self.edititemindex = None
 
         self.time_line = QTimeLine(400, self)
-        self.time_line.setFrameRange(0, 220);
+        self.time_line.setFrameRange(0, 220)
         self.time_line.frameChanged[int].connect(self.animate)
 
         self.ui.scrollArea.setFixedHeight(0)
@@ -47,11 +49,10 @@ class Widget(QWidget, ScreenWidget):
         self.normal_user_icon = QPixmap(":/gui/pics/users.png")
         self.super_user_icon = QPixmap(":/gui/pics/users.png")
 
-
         # Set disabled the create Button
         self.ui.createButton.setEnabled(False)
 
-        # Connections
+        # Connections
         self.ui.pass1.textChanged[str].connect(self.slotTextChanged)
         self.ui.pass2.textChanged[str].connect(self.slotTextChanged)
         self.ui.username.textChanged[str].connect(self.slotTextChanged)
@@ -68,20 +69,21 @@ class Widget(QWidget, ScreenWidget):
         self.ui.userList.itemDoubleClicked[QListWidgetItem].connect(self.slotEditUser)
         self.ui.pass2.returnPressed.connect(self.slotReturnPressed)
 
-        #focusInEvent is not a signal
-        #self.ui.pass1.focusInEvent[QFocusEvent].connect(self.checkCapsLock) 
-        #self.ui.pass2.focusInEvent[QFocusEvent].connect(self.checkCapsLock)
-        #self.ui.username.focusInEvent[QFocusEvent].connect(self.checkCapsLock)
-        #self.ui.realname.focusInEvent[QFocusEvent].connect(self.checkCapsLock)
+        # focusInEvent is not a signal
+        # self.ui.pass1.focusInEvent[QFocusEvent].connect(self.checkCapsLock)
+        # self.ui.pass2.focusInEvent[QFocusEvent].connect(self.checkCapsLock)
+        # self.ui.username.focusInEvent[QFocusEvent].connect(self.checkCapsLock)
+        # self.ui.realname.focusInEvent[QFocusEvent].connect(self.checkCapsLock)
 
         ctx.installData.users = []
         ctx.installData.autoLoginUser = None
         self.user_name_changed = False
         self.used_ids = []
 
-    def eventFilter(self,obj,event):
-        if even.type()==QEvent.FocusIn:
-            if obj== self.ui.pass1 or obj==self.ui.pass2 or obj==self.ui.username or obj == self.ui.realname:
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.FocusIn:  # even.type() ==...
+            if obj == self.ui.pass1 or obj == self.ui.pass2 or \
+                    obj == self.ui.username or obj == self.ui.realname:
                 self.checkCapsLock()
 
     def shown(self):
@@ -92,7 +94,7 @@ class Widget(QWidget, ScreenWidget):
                 pix = self.normal_user_icon
                 if "wheel" in u.groups:
                     pix = self.super_user_icon
-                UserItem(self.ui.userList, pix, user = u)
+                UserItem(self.ui.userList, pix, user=u)
                 self.ui.autoLogin.addItem(u.username)
         if len(yali.users.PENDING_USERS) == 1:
             self.slotEditUser(self.ui.userList.item(0))
@@ -424,5 +426,3 @@ class UserItem(QListWidgetItem):
 
     def getUser(self):
         return self._user
-
-

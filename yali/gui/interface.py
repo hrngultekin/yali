@@ -7,7 +7,8 @@ try:
 except Exception:
     _ = lambda x, y: y
 
-from yali.gui.YaliDialog import MessageWindow, InformationWindow, ProgressWindow, ExceptionWindow
+from yali.gui.YaliDialog import (MessageWindow, InformationWindow,
+                                 ProgressWindow, ExceptionWindow)
 
 
 class Interface(object):
@@ -27,8 +28,14 @@ class Interface(object):
     def progressWindow(self, message):
         return ProgressWindow(message)
 
-    def messageWindow(self, title, text, type="ok", default=None, customButtons=None, customIcon=None):
-        return MessageWindow(title, text, type, default, customButtons, customIcon, run=True).rc
+    def messageWindow(self, title, text, type="ok", default=None,
+                      customButtons=None, customIcon=None):
+        return MessageWindow(title, text, type, default, customButtons,
+                             customIcon, run=True).rc
 
-    def detailedMessageWindow(self, title, text, longText, type="ok", default=None, customButtons=None, customIcon=None):
-        return MessageWindow(title, text, type, default, customButtons, customIcon, run=True, detailed=True, longText=longText).rc
+    def detailedMessageWindow(self, title, text, longText, type="ok",
+                              default=None, customButtons=None,
+                              customIcon=None):
+        return MessageWindow(title, text, type, default, customButtons,
+                             customIcon, run=True, detailed=True,
+                             longText=longText).rc

@@ -545,8 +545,8 @@ class StorageSet(object):
         def mountDict():
             """Return a dictionary mapping mount points to devices."""
             ret = {}
-            #for d in self.devices:
-                #print(d.format)
+            # for d in self.devices:
+            #     print(d.format)
 
             for device in [d for d in self.devices if d.format.mountable or d.format.type == "efi"]:
                 # FIXME: _mountpoints değişkeni için geçici gözüm
@@ -560,9 +560,11 @@ class StorageSet(object):
                         ret[l.split(" ")[1]] = device
 
                     # WARNING: mountpoint None dönüyor
-                #print(device.format.mountpoint)
+                # print(device.format.mountpoint)
                 if device.format.type == "efi":
-                    ret["efi"] = device
+                    if device.format.mountpoint is None:
+                        device.format.mountpoint="/boot/efi"
+                    # ret["efi"] = device
 
                 if device.format.mountpoint:
                     ret[device.format.mountpoint] = device
@@ -570,9 +572,10 @@ class StorageSet(object):
             return ret
 
         _mountpoints = mountDict()
+        # print(_mountpoints.get("/boot/efi", _mountpoints.get("efi")))
         if yali.util.isEfi():
             # print("mountpoints.get -> ", _mountpoints)
-            return _mountpoints.get("/boot/efi", _mountpoints.get("efi"))
+            return _mountpoints.get("/boot/efi", _mountpoints.get("/"))
         else:
             return _mountpoints.get("/boot", _mountpoints.get("/"))
 
