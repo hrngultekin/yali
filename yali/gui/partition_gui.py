@@ -321,6 +321,9 @@ class PartitionWidget(QtWidgets.QWidget, Ui_PartitionWidget):
         format = formats.getFormat(str(self.sender().itemText(index)))
         self.enableMountpoint(format)
 
+        if format.type == "efi":
+            self.mountpointMenu.setCurrentText("/boot/efi")
+
         if not self.origrequest.exists:
             if self.parent.isNew:
                 maxsize = self.parent.partedPartition.getSize(unit="MB")
