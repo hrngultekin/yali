@@ -134,8 +134,15 @@ def setupUsers():
                     yali.util.start_dbus()
                     yali.util.comarLinkInitialized()
 
-                user_id = ctx.link.User.Manager["baselayout"].addUser(user.uid, user.username, user.realname, "", "",
-                                                                      unicode(user.passwd), user.groups, [], [])
+                try:
+                    user_id = ctx.link.User.Manager["baselayout"].addUser(user.uid, user.username, user.realname, "", "",
+                                                                          unicode(user.passwd), user.groups, [], [])
+                except Exception:
+                    yali.util.start_dbus()
+                    yali.util.comarLinkInitialized()
+                    user_id = ctx.link.User.Manager["baselayout"].addUser(user.uid, user.username, user.realname, "", "",
+                                                                          unicode(user.passwd), user.groups, [], [])
+
                 # user_id = ctx.link.User.Manager["baselayout"].addUser(
                 #     user.uid, user.username, user.realname, "", "",
                 #     unicode(user.passwd), user.groups, [], [])
