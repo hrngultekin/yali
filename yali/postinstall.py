@@ -128,7 +128,8 @@ def setupUsers():
             try:
                 # print("===== user =====")
                 # print(user.groups)
-                # print("===== user =====")
+                # print("===== user
+
                 if not yali.util.check_link():
                     yali.util.start_dbus()
                     yali.util.comarLinkInitialized()
