@@ -20,7 +20,7 @@ try:
     from PyQt5.QtCore import QCoreApplication
     _ = QCoreApplication.translate
 except Exception:
-    _ = lambda x,y: y
+    _ = lambda x, y: y
 
 import yali.util
 import yali.users
@@ -114,21 +114,25 @@ def setHostName():
 def setupUsers():
     if yali.util.check_link() and yali.users.PENDING_USERS:
         # sqfs user (pisi) remove with files
-        print("==== deleteUser ====")
+        # print("==== deleteUser ====")
         try:
             ctx.link.User.Manager["baselayout"].deleteUser(1000, True)
             if os.path.exists("%s/home/pisi" % ctx.consts.target_dir):
                 os.system(" rm -rf %s/home/pisi" % ctx.consts.target_dir)
         except Exception as e:
             print("deleteUser Error: %s" % e)
-        print("==== deleteUser ====")
+        # print("==== deleteUser ====")
 
         for user in yali.users.PENDING_USERS:
             ctx.logger.info("User %s adding to system" % user.username)
             try:
-                print("===== user =====")
-                print(user.groups)
-                print("===== user =====")
+                # print("===== user =====")
+                # print(user.groups)
+                # print("===== user =====")
+                if yali.util.check_link():
+                    yali.util.start_dbus()
+                    yali.util.comarLinkInitialized()
+
                 user_id = ctx.link.User.Manager["baselayout"].addUser(user.uid, user.username, user.realname, "", "",
                                                                       unicode(user.passwd), user.groups, [], [])
                 # user_id = ctx.link.User.Manager["baselayout"].addUser(
@@ -136,7 +140,7 @@ def setupUsers():
                 #     unicode(user.passwd), user.groups, [], [])
             except dbus.DBusException as e:
                 ctx.logger.error("Adding user failed")
-                print(e)
+                print("Adding user failed", e)
                 return False
             else:
                 ctx.logger.debug("New user's id is %s" % user_id)
